@@ -3,111 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyseur Graham - L'Investisseur Intelligent</title>
+    <title>Analyseur Brutal d'Entreprises</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📈 Analyseur Graham</h1>
-            <p>Appliquez la méthode de Benjamin Graham pour évaluer les actions</p>
-        </header>
+        <h1>Analyseur Brutal d'Entreprises</h1>
+        <p><em>"Si tu ne peux pas calculer ta marge de sécurité, n'investis pas." - Benjamin Graham</em></p>
 
-        <div class="calculator-section">
-            <h2>Calculateur de Valeur Intrinsèque</h2>
+        <!-- Section de Saisie des Données -->
+        <div class="input-section">
+            <h2>1. Données de l'Entreprise</h2>
             
-            <div class="input-grid">
-                <div class="input-group">
-                    <label for="companyName">Nom de l'entreprise :</label>
-                    <input type="text" id="companyName" placeholder="Ex: Apple Inc.">
-                </div>
-                
-                <div class="input-group">
-                    <label for="stockPrice">Prix actuel de l'action ($) :</label>
-                    <input type="number" id="stockPrice" step="0.01" placeholder="150.00">
-                </div>
+            <div class="input-group">
+                <label>Nom de l'entreprise:</label>
+                <input type="text" id="companyName" placeholder="Ex: Apple Inc.">
+            </div>
 
-                <div class="input-group">
-                    <label for="eps">Bénéfice par action (BPA) :</label>
-                    <input type="number" id="eps" step="0.01" placeholder="6.50">
+            <h3>Données Brutes (À remplir manuellement)</h3>
+            
+            <!-- Santé Financière -->
+            <div class="input-category">
+                <h4>Santé Financière</h4>
+                <div class="input-row">
+                    <label>Actif à Court Terme (€):</label>
+                    <input type="number" id="currentAssets" placeholder="1000000">
                 </div>
-
-                <div class="input-group">
-                    <label for="bookValue">Valeur comptable par action :</label>
-                    <input type="number" id="bookValue" step="0.01" placeholder="25.00">
+                <div class="input-row">
+                    <label>Passif à Court Terme (€):</label>
+                    <input type="number" id="currentLiabilities" placeholder="500000">
                 </div>
-
-                <div class="input-group">
-                    <label for="growthRate">Taux de croissance estimé (%) :</label>
-                    <input type="number" id="growthRate" step="0.1" placeholder="8.0">
+                <div class="input-row">
+                    <label>Dette Totale (€):</label>
+                    <input type="number" id="totalDebt" placeholder="2000000">
                 </div>
-
-                <div class="input-group">
-                    <label for="dividend">Dividende annuel par action :</label>
-                    <input type="number" id="dividend" step="0.01" placeholder="1.00">
+                <div class="input-row">
+                    <label>Capitaux Propres (€):</label>
+                    <input type="number" id="shareholdersEquity" placeholder="5000000">
+                </div>
+                <div class="input-row">
+                    <label>EBIT (€):</label>
+                    <input type="number" id="ebit" placeholder="1500000">
+                </div>
+                <div class="input-row">
+                    <label>Frais Financiers (€):</label>
+                    <input type="number" id="interestExpense" placeholder="100000">
+                </div>
+                <div class="input-row">
+                    <label>Cash Flow Opérationnel (€):</label>
+                    <input type="number" id="operatingCashFlow" placeholder="1800000">
+                </div>
+                <div class="input-row">
+                    <label>Dépenses en Capital (CapEx) (€):</label>
+                    <input type="number" id="capitalExpenditures" placeholder="500000">
                 </div>
             </div>
 
-            <button onclick="calculateGraham()" class="calculate-btn">
-                Calculer l'analyse
-            </button>
+            <!-- Rentabilité -->
+            <div class="input-category">
+                <h4>Rentabilité</h4>
+                <div class="input-row">
+                    <label>Bénéfice Net (€):</label>
+                    <input type="number" id="netIncome" placeholder="1200000">
+                </div>
+                <div class="input-row">
+                    <label>Chiffre d'Affaires (€):</label>
+                    <input type="number" id="revenue" placeholder="10000000">
+                </div>
+                <div class="input-row">
+                    <label>NOPAT (€):</label>
+                    <input type="number" id="nopat" placeholder="1300000">
+                </div>
+            </div>
+
+            <!-- Évaluation -->
+            <div class="input-category">
+                <h4>Évaluation</h4>
+                <div class="input-row">
+                    <label>Prix de l'Action (€):</label>
+                    <input type="number" id="sharePrice" placeholder="150">
+                </div>
+                <div class="input-row">
+                    <label>Nombre d'Actions:</label>
+                    <input type="number" id="sharesOutstanding" placeholder="10000000">
+                </div>
+                <div class="input-row">
+                    <label>Valeur Comptable par Action (€):</label>
+                    <input type="number" id="bookValuePerShare" placeholder="50">
+                </div>
+                <div class="input-row">
+                    <label>Dividende par Action (€):</label>
+                    <input type="number" id="dividendPerShare" placeholder="3">
+                </div>
+                <div class="input-row">
+                    <label>Croissance Annuelle du BPA (%):</label>
+                    <input type="number" id="epsGrowth" placeholder="15">
+                </div>
+                <div class="input-row">
+                    <label>EBITDA (€):</label>
+                    <input type="number" id="ebitda" placeholder="2000000">
+                </div>
+                <div class="input-row">
+                    <label>Trésorerie (€):</label>
+                    <input type="number" id="cash" placeholder="1000000">
+                </div>
+            </div>
+
+            <!-- Croissance -->
+            <div class="input-category">
+                <h4>Croissance & Technique</h4>
+                <div class="input-row">
+                    <label>Croissance du CA sur 1 an (%):</label>
+                    <input type="number" id="revenueGrowth" placeholder="12">
+                </div>
+                <div class="input-row">
+                    <label>BPA de l'année précédente (€):</label>
+                    <input type="number" id="previousEPS" placeholder="4.5">
+                </div>
+                <div class="input-row">
+                    <label>Prix actuel vs Moyenne Mobile 200j (%):</label>
+                    <input type="number" id="priceVsMA200" placeholder="5">
+                </div>
+            </div>
+
+            <button onclick="lancerAnalyse()" class="analyze-btn">Lancer l'Analyse Brutale</button>
         </div>
 
-        <div id="results" class="results-section" style="display: none;">
-            <h2>Résultats de l'analyse</h2>
+        <!-- Section Résultats -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h2>2. Résultats de l'Analyse - <span id="resultsCompanyName"></span></h2>
             
-            <div class="results-grid">
-                <div class="result-card">
-                    <h3>Valeur Intrinsèque</h3>
-                    <p id="intrinsicValue" class="value">-</p>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Marge de Sécurité</h3>
-                    <p id="marginSafety" class="value">-</p>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Ratio P/E</h3>
-                    <p id="peRatio" class="value">-</p>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Ratio P/B</h3>
-                    <p id="pbRatio" class="value">-</p>
-                </div>
+            <div id="resultsTable">
+                <!-- Le tableau sera généré ici par JavaScript -->
             </div>
 
-            <div class="recommendation">
-                <h3>Recommandation</h3>
-                <p id="recommendationText"></p>
-            </div>
-
-            <div class="details">
-                <h3>Détails du calcul</h3>
-                <div id="calculationDetails"></div>
-            </div>
-        </div>
-
-        <div class="principles-section">
-            <h2>📚 Les Principes de Graham</h2>
-            <div class="principles-grid">
-                <div class="principle">
-                    <h4>🛡️ Marge de Sécurité</h4>
-                    <p>Achetez avec une décote d'au moins 25-30% par rapport à la valeur intrinsèque</p>
-                </div>
-                <div class="principle">
-                    <h4>📊 Ratio P/E Raisonnable</h4>
-                    <p>Le ratio Prix/Bénéfice ne devrait pas dépasser 15</p>
-                </div>
-                <div class="principle">
-                    <h4>🏦 Ratio P/B Conservateur</h4>
-                    <p>Le ratio Prix/Valeur comptable idéal est inférieur à 1.5</p>
-                </div>
-                <div class="principle">
-                    <h4>💵 Dividende Stable</h4>
-                    <p>Recherchez des entreprises avec un historique de dividendes stable</p>
-                </div>
+            <div id="conclusion" class="conclusion">
+                <!-- La conclusion sera générée ici -->
             </div>
         </div>
     </div>
