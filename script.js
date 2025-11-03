@@ -14,6 +14,160 @@ function initYearSelector() {
         yearSelect.appendChild(option);
     }
 }
+// Configuration des sélecteurs pour Investir.fr
+const INVESTIR_SELECTORS = {
+    // Sélecteurs CSS pour les données financières (à adapter selon la structure du site)
+    companyName: '.company-header h1',
+    currentAssets: '[data-field="currentAssets"]',
+    currentLiabilities: '[data-field="currentLiabilities"]',
+    totalDebt: '[data-field="totalDebt"]',
+    shareholdersEquity: '[data-field="shareholdersEquity"]',
+    ebit: '[data-field="ebit"]',
+    interestExpense: '[data-field="interestExpense"]',
+    operatingCashFlow: '[data-field="operatingCashFlow"]',
+    capitalExpenditures: '[data-field="capitalExpenditures"]',
+    netIncome: '[data-field="netIncome"]',
+    revenue: '[data-field="revenue"]',
+    nopat: '[data-field="nopat"]',
+    sharePrice: '[data-field="sharePrice"]',
+    sharesOutstanding: '[data-field="sharesOutstanding"]',
+    bookValuePerShare: '[data-field="bookValuePerShare"]',
+    dividendPerShare: '[data-field="dividendPerShare"]',
+    epsGrowth: '[data-field="epsGrowth"]',
+    ebitda: '[data-field="ebitda"]',
+    cash: '[data-field="cash"]',
+    revenueGrowth: '[data-field="revenueGrowth"]',
+    previousEPS: '[data-field="previousEPS"]',
+    priceVsMA200: '[data-field="priceVsMA200"]'
+};
+
+async function recupererDonneesFinancieres() {
+    const link = document.getElementById('investirLink').value;
+    const year = document.getElementById('dataYear').value;
+    const fetchBtn = document.getElementById('fetchDataBtn');
+    const statusDiv = document.getElementById('fetchStatus');
+    
+    if (!link) {
+        showStatus('Veuillez entrer un lien Investir', 'error');
+        return;
+    }
+
+    if (!link.includes('investir.')) {
+        showStatus('Le lien doit provenir du site Investir', 'error');
+        return;
+    }
+
+    try {
+        fetchBtn.disabled = true;
+        fetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Récupération en cours...';
+        showStatus('Connexion au site Investir...', 'loading');
+
+        // Utilisation d'un proxy CORS pour contourner les restrictions
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const response = await fetch(proxyUrl + link, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // Récupérer le nom de l'entreprise
+        const companyNameElement = doc.querySelector(INVESTIR_SELECTORS.companyName);
+        if (companyNameElement) {
+            document.getElementById('companyName').value = companyNameElement.textContent.trim();
+        }
+
+        // Fonction pour extraire et formater les données financières
+        const extractFinancialData = (selector, isPercentage = false) => {
+            const element = doc.querySelector(selector);
+            if (!element) return null;
+            
+            let text = element.textContent.trim();
+            
+            // Nettoyer le texte
+            text = text.replace(/\s+/g, '')
+                      .replace('€', '')
+                      .replace('%', '')
+                      .replace(',', '.');
+            
+            // Gérer les formats différents (K, M, B pour milliers, millions, milliards)
+            if (text.includes('K') || text.includes('k')) {
+                text = parseFloat(text) * 1000;
+            } else if (text.includes('M') || text.includes('m')) {
+                text = parseFloat(text) * 1000000;
+            } else if (text.includes('B') || text.includes('b')) {
+                text = parseFloat(text) * 1000000000;
+            } else {
+                text = parseFloat(text);
+            }
+            
+            return isPercentage ? text : Math.round(text);
+        };
+
+        // Récupérer et remplir toutes les données
+        const financialData = {
+            currentAssets: extractFinancialData(INVESTIR_SELECTORS.currentAssets),
+            currentLiabilities: extractFinancialData(INVESTIR_SELECTORS.currentLiabilities),
+            totalDebt: extractFinancialData(INVESTIR_SELECTORS.totalDebt),
+            shareholdersEquity: extractFinancialData(INVESTIR_SELECTORS.shareholdersEquity),
+            ebit: extractFinancialData(INVESTIR_SELECTORS.ebit),
+            interestExpense: extractFinancialData(INVESTIR_SELECTORS.interestExpense),
+            operatingCashFlow: extractFinancialData(INVESTIR_SELECTORS.operatingCashFlow),
+            capitalExpenditures: extractFinancialData(INVESTIR_SELECTORS.capitalExpenditures),
+            netIncome: extractFinancialData(INVESTIR_SELECTORS.netIncome),
+            revenue: extractFinancialData(INVESTIR_SELECTORS.revenue),
+            nopat: extractFinancialData(INVESTIR_SELECTORS.nopat),
+            sharePrice: extractFinancialData(INVESTIR_SELECTORS.sharePrice),
+            sharesOutstanding: extractFinancialData(INVESTIR_SELECTORS.sharesOutstanding),
+            bookValuePerShare: extractFinancialData(INVESTIR_SELECTORS.bookValuePerShare),
+            dividendPerShare: extractFinancialData(INVESTIR_SELECTORS.dividendPerShare),
+            epsGrowth: extractFinancialData(INVESTIR_SELECTORS.epsGrowth, true),
+            ebitda: extractFinancialData(INVESTIR_SELECTORS.ebitda),
+            cash: extractFinancialData(INVESTIR_SELECTORS.cash),
+            revenueGrowth: extractFinancialData(INVESTIR_SELECTORS.revenueGrowth, true),
+            previousEPS: extractFinancialData(INVESTIR_SELECTORS.previousEPS),
+            priceVsMA200: extractFinancialData(INVESTIR_SELECTORS.priceVsMA200, true)
+        };
+
+        // Remplir les champs du formulaire
+        Object.keys(financialData).forEach(field => {
+            const value = financialData[field];
+            const input = document.getElementById(field);
+            
+            if (input && value !== null && !isNaN(value)) {
+                input.value = value;
+            }
+        });
+
+        showStatus('Données financières récupérées avec succès!', 'success');
+        
+    } catch (error) {
+        console.error('Erreur lors de la récupération:', error);
+        showStatus(`Erreur: ${error.message}`, 'error');
+    } finally {
+        fetchBtn.disabled = false;
+        fetchBtn.innerHTML = '<i class="fas fa-download"></i> Récupérer les données financières';
+    }
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('fetchStatus');
+    statusDiv.textContent = message;
+    statusDiv.className = `fetch-status ${type}`;
+    
+    // Effacer le message après 5 secondes
+    setTimeout(() => {
+        statusDiv.textContent = '';
+        statusDiv.className = 'fetch-status';
+    }, 5000);
+}
 
 // Afficher/masquer le champ trimestre
 function toggleQuarterField() {
