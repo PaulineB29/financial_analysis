@@ -23,29 +23,37 @@ const CONFIG = {
         priceVsMA200: { bon: 0, excellent: 0.05 }
     },
 
-    INVESTIR_SELECTORS: {
-        companyName: '.company-header h1',
-        currentAssets: '[data-field="currentAssets"]',
-        currentLiabilities: '[data-field="currentLiabilities"]',
-        totalDebt: '[data-field="totalDebt"]',
-        shareholdersEquity: '[data-field="shareholdersEquity"]',
-        ebit: '[data-field="ebit"]',
-        interestExpense: '[data-field="interestExpense"]',
-        operatingCashFlow: '[data-field="operatingCashFlow"]',
-        capitalExpenditures: '[data-field="capitalExpenditures"]',
-        netIncome: '[data-field="netIncome"]',
-        revenue: '[data-field="revenue"]',
-        nopat: '[data-field="nopat"]',
-        sharePrice: '[data-field="sharePrice"]',
-        sharesOutstanding: '[data-field="sharesOutstanding"]',
-        bookValuePerShare: '[data-field="bookValuePerShare"]',
-        dividendPerShare: '[data-field="dividendPerShare"]',
-        epsGrowth: '[data-field="epsGrowth"]',
-        ebitda: '[data-field="ebitda"]',
-        cash: '[data-field="cash"]',
-        revenueGrowth: '[data-field="revenueGrowth"]',
-        previousEPS: '[data-field="previousEPS"]',
-        priceVsMA200: '[data-field="priceVsMA200"]'
+    // Sélecteurs spécifiques à Investing.com
+    INVESTING_SELECTORS: {
+        companyName: 'h1[data-test="instrument-header-title"]',
+        
+        // Données du bilan
+        currentAssets: '[data-test="currentAssets"]',
+        currentLiabilities: '[data-test="currentLiabilities"]',
+        totalDebt: '[data-test="totalDebt"]',
+        shareholdersEquity: '[data-test="totalEquity"]',
+        cash: '[data-test="cashAndShortTermInvestments"]',
+        
+        // Données du compte de résultat
+        revenue: '[data-test="totalRevenue"]',
+        ebit: '[data-test="ebit"]',
+        ebitda: '[data-test="ebitda"]',
+        netIncome: '[data-test="netIncome"]',
+        interestExpense: '[data-test="interestExpense"]',
+        
+        // Données des flux de trésorerie
+        operatingCashFlow: '[data-test="operatingCashFlow"]',
+        capitalExpenditures: '[data-test="capitalExpenditure"]',
+        
+        // Données de marché
+        sharePrice: '[data-test="instrument-price-last"]',
+        sharesOutstanding: '[data-test="sharesOutstanding"]',
+        dividendPerShare: '[data-test="dividendPerShare"]',
+        
+        // Ratios et croissance
+        bookValuePerShare: '[data-test="bookValuePerShare"]',
+        epsGrowth: '[data-test="epsGrowth"]',
+        revenueGrowth: '[data-test="revenueGrowth"]'
     },
 
     CATEGORIES: {
@@ -60,28 +68,26 @@ const CONFIG = {
 
 // Utilitaires
 const Utils = {
-    // Formater les nombres financiers
     formatFinancialValue(value, isPercentage = false) {
         if (value === null || isNaN(value)) return null;
-        
         return isPercentage ? value : Math.round(value);
     },
 
-    // Nettoyer et parser le texte financier
     parseFinancialText(text, isPercentage = false) {
         if (!text) return null;
 
         let cleanedText = text.trim()
             .replace(/\s+/g, '')
-            .replace('€', '')
-            .replace('%', '')
-            .replace(',', '.');
+            .replace(/[$,€]/g, '')
+            .replace(/%/g, '')
+            .replace(/,/g, '.');
 
-        // Gérer les suffixes (K, M, B)
+        // Gérer les suffixes (K, M, B, T)
         const multiplier = {
             'k': 1000, 'K': 1000,
             'm': 1000000, 'M': 1000000,
-            'b': 1000000000, 'B': 1000000000
+            'b': 1000000000, 'B': 1000000000,
+            't': 1000000000000, 'T': 1000000000000
         };
 
         const suffix = cleanedText.slice(-1);
@@ -94,7 +100,6 @@ const Utils = {
         return this.formatFinancialValue(cleanedText, isPercentage);
     },
 
-    // Obtenir le verdict d'un ratio
     getVerdict(valeur, seuil, nomRatio) {
         const nomCle = nomRatio.toLowerCase().replace(/[^a-zA-Z]/g, '');
         const estInverse = CONFIG.RATIOS_INVERSES.includes(nomCle);
@@ -110,7 +115,6 @@ const Utils = {
         return 'Faible';
     },
 
-    // Obtenir la classe CSS du verdict
     getClasseVerdict(verdict) {
         const classes = {
             'Excellent': 'ratio-excellent',
@@ -120,7 +124,6 @@ const Utils = {
         return classes[verdict] || '';
     },
 
-    // Afficher le statut de récupération
     showStatus(message, type) {
         const statusDiv = document.getElementById('fetchStatus');
         if (!statusDiv) return;
@@ -137,7 +140,6 @@ const Utils = {
 
 // Gestion de l'interface utilisateur
 const UI = {
-    // Initialiser les onglets
     initTabs() {
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -154,7 +156,6 @@ const UI = {
         });
     },
 
-    // Initialiser le sélecteur d'années
     initYearSelector() {
         const yearSelect = document.getElementById('dataYear');
         if (!yearSelect) return;
@@ -170,7 +171,6 @@ const UI = {
         }
     },
 
-    // Basculer le champ trimestre
     toggleQuarterField() {
         const periodType = document.getElementById('periodType')?.value;
         const quarterField = document.getElementById('quarterField');
@@ -179,9 +179,7 @@ const UI = {
         quarterField.style.display = periodType === 'quarterly' ? 'block' : 'none';
     },
 
-    // Afficher les scores
     afficherScores(scores) {
-        // Score global
         const globalScoreElement = document.getElementById('globalScore');
         const scoreCircle = document.querySelector('.score-circle');
         
@@ -192,7 +190,6 @@ const UI = {
             scoreCircle.style.background = `conic-gradient(var(--primary) ${scores.global}%, var(--border) ${scores.global}%)`;
         }
 
-        // Scores par catégorie
         const scoreElements = {
             sante: 'healthScore',
             rentabilite: 'profitabilityScore',
@@ -209,7 +206,6 @@ const UI = {
         });
     },
 
-    // Générer la conclusion
     genererConclusion(scores) {
         const scoreGlobal = scores.global;
         const conclusionElement = document.getElementById('conclusion');
@@ -250,7 +246,6 @@ const UI = {
 
 // Gestion des données financières
 const FinancialData = {
-    // Récupérer les valeurs des inputs
     getInputValues() {
         const periodType = document.getElementById('periodType')?.value || 'annual';
         const year = document.getElementById('dataYear')?.value || new Date().getFullYear();
@@ -284,7 +279,6 @@ const FinancialData = {
         return data;
     },
 
-    // Calculer les ratios financiers
     calculerRatios(inputs) {
         const marketCap = inputs.sharePrice * inputs.sharesOutstanding;
         const enterpriseValue = marketCap + inputs.totalDebt - inputs.cash;
@@ -315,7 +309,6 @@ const FinancialData = {
         };
     },
 
-    // Calculer les scores
     calculerScores(ratios) {
         const scores = {};
 
@@ -352,27 +345,27 @@ const FinancialData = {
     }
 };
 
-// Récupération des données depuis Investir.fr
-const InvestirScraper = {
+// Récupération des données depuis Investing.com
+const InvestingScraper = {
     async recupererDonneesFinancieres() {
-        const link = document.getElementById('investirLink')?.value;
+        const link = document.getElementById('investingLink')?.value;
         const fetchBtn = document.getElementById('fetchDataBtn');
         
         if (!link) {
-            Utils.showStatus('Veuillez entrer un lien Investir', 'error');
+            Utils.showStatus('Veuillez entrer un lien Investing.com', 'error');
             return;
         }
 
-        if (!link.includes('investir.')) {
-            Utils.showStatus('Le lien doit provenir du site Investir', 'error');
+        if (!link.includes('investing.com')) {
+            Utils.showStatus('Le lien doit provenir du site Investing.com', 'error');
             return;
         }
 
         try {
             this.setFetchButtonState(fetchBtn, true);
-            Utils.showStatus('Connexion au site Investir...', 'loading');
+            Utils.showStatus('Connexion à Investing.com...', 'loading');
 
-            const html = await this.fetchInvestirData(link);
+            const html = await this.fetchInvestingData(link);
             const doc = this.parseHTML(html);
             
             this.extractAndFillData(doc);
@@ -386,11 +379,14 @@ const InvestirScraper = {
         }
     },
 
-    async fetchInvestirData(link) {
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const response = await fetch(proxyUrl + link, {
+    async fetchInvestingData(link) {
+        // Investing.com a une protection CORS stricte, on utilise un proxy
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        const response = await fetch(proxyUrl + encodeURIComponent(link), {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'fr-FR,fr;q=0.8,en-US;q=0.5,en;q=0.3'
             }
         });
 
@@ -420,7 +416,7 @@ const InvestirScraper = {
 
     extractAndFillData(doc) {
         // Récupérer le nom de l'entreprise
-        const companyNameElement = doc.querySelector(CONFIG.INVESTIR_SELECTORS.companyName);
+        const companyNameElement = doc.querySelector(CONFIG.INVESTING_SELECTORS.companyName);
         if (companyNameElement) {
             const companyNameInput = document.getElementById('companyName');
             if (companyNameInput) {
@@ -428,21 +424,65 @@ const InvestirScraper = {
             }
         }
 
-        // Extraire et remplir toutes les données financières
-        Object.entries(CONFIG.INVESTIR_SELECTORS).forEach(([field, selector]) => {
-            if (field === 'companyName') return;
+        // Fonction helper pour extraire une donnée
+        const extractData = (field, isPercentage = false) => {
+            const selector = CONFIG.INVESTING_SELECTORS[field];
+            if (!selector) return null;
 
             const element = doc.querySelector(selector);
-            if (!element) return;
+            if (!element) return null;
 
-            const isPercentage = ['epsGrowth', 'revenueGrowth', 'priceVsMA200'].includes(field);
-            const value = Utils.parseFinancialText(element.textContent, isPercentage);
-            const input = document.getElementById(field);
+            return Utils.parseFinancialText(element.textContent, isPercentage);
+        };
+
+        // Extraire et remplir les données de base
+        const financialData = {
+            // Données du bilan
+            currentAssets: extractData('currentAssets'),
+            currentLiabilities: extractData('currentLiabilities'),
+            totalDebt: extractData('totalDebt'),
+            shareholdersEquity: extractData('shareholdersEquity'),
+            cash: extractData('cash'),
             
+            // Données du compte de résultat
+            revenue: extractData('revenue'),
+            ebit: extractData('ebit'),
+            ebitda: extractData('ebitda'),
+            netIncome: extractData('netIncome'),
+            interestExpense: extractData('interestExpense'),
+            
+            // Données des flux de trésorerie
+            operatingCashFlow: extractData('operatingCashFlow'),
+            capitalExpenditures: extractData('capitalExpenditures'),
+            
+            // Données de marché
+            sharePrice: extractData('sharePrice'),
+            sharesOutstanding: extractData('sharesOutstanding'),
+            dividendPerShare: extractData('dividendPerShare'),
+            
+            // Ratios
+            bookValuePerShare: extractData('bookValuePerShare'),
+            epsGrowth: extractData('epsGrowth', true),
+            revenueGrowth: extractData('revenueGrowth', true)
+        };
+
+        // Remplir les champs du formulaire
+        Object.entries(financialData).forEach(([field, value]) => {
+            const input = document.getElementById(field);
             if (input && value !== null && !isNaN(value)) {
                 input.value = value;
             }
         });
+
+        // Calculer le NOPAT (EBIT * (1 - taux d'imposition))
+        // Pour une estimation simple, on utilise un taux d'imposition de 25%
+        const ebitValue = financialData.ebit;
+        if (ebitValue !== null && !isNaN(ebitValue)) {
+            const nopatInput = document.getElementById('nopat');
+            if (nopatInput) {
+                nopatInput.value = Math.round(ebitValue * 0.75);
+            }
+        }
     }
 };
 
@@ -467,7 +507,7 @@ function afficherResultats(companyName, periodDisplay, ratios, scores) {
     
     if (companyNameElement) companyNameElement.textContent = companyName;
     if (periodElement) periodElement.textContent = periodDisplay;
-    if (resultsTable) resultsTable.innerHTML = this.genererLignesTableau(ratios);
+    if (resultsTable) resultsTable.innerHTML = genererLignesTableau(ratios);
     if (resultsSection) resultsSection.style.display = 'block';
 }
 
@@ -530,12 +570,12 @@ document.addEventListener('DOMContentLoaded', function() {
     UI.initYearSelector();
     UI.toggleQuarterField();
     
-    // Écouteur pour la touche Entrée sur le lien Investir
-    const investirLink = document.getElementById('investirLink');
-    if (investirLink) {
-        investirLink.addEventListener('keypress', function(e) {
+    // Écouteur pour la touche Entrée sur le lien Investing
+    const investingLink = document.getElementById('investingLink');
+    if (investingLink) {
+        investingLink.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                InvestirScraper.recupererDonneesFinancieres();
+                InvestingScraper.recupererDonneesFinancieres();
             }
         });
     }
