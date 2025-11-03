@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyseur Graham - L'Investisseur Intelligent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Analyseur Graham</h1>
+            <p>Appliquez la méthode de Benjamin Graham pour évaluer les actions</p>
+        </header>
+
+        <div class="calculator-section">
+            <h2>Calculateur de Valeur Intrinsèque</h2>
+            
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="companyName">Nom de l'entreprise :</label>
+                    <input type="text" id="companyName" placeholder="Ex: Apple Inc.">
+                </div>
+                
+                <div class="input-group">
+                    <label for="stockPrice">Prix actuel de l'action ($) :</label>
+                    <input type="number" id="stockPrice" step="0.01" placeholder="150.00">
+                </div>
+
+                <div class="input-group">
+                    <label for="eps">Bénéfice par action (BPA) :</label>
+                    <input type="number" id="eps" step="0.01" placeholder="6.50">
+                </div>
+
+                <div class="input-group">
+                    <label for="bookValue">Valeur comptable par action :</label>
+                    <input type="number" id="bookValue" step="0.01" placeholder="25.00">
+                </div>
+
+                <div class="input-group">
+                    <label for="growthRate">Taux de croissance estimé (%) :</label>
+                    <input type="number" id="growthRate" step="0.1" placeholder="8.0">
+                </div>
+
+                <div class="input-group">
+                    <label for="dividend">Dividende annuel par action :</label>
+                    <input type="number" id="dividend" step="0.01" placeholder="1.00">
+                </div>
+            </div>
+
+            <button onclick="calculateGraham()" class="calculate-btn">
+                Calculer l'analyse
+            </button>
+        </div>
+
+        <div id="results" class="results-section" style="display: none;">
+            <h2>Résultats de l'analyse</h2>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <h3>Valeur Intrinsèque</h3>
+                    <p id="intrinsicValue" class="value">-</p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Marge de Sécurité</h3>
+                    <p id="marginSafety" class="value">-</p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Ratio P/E</h3>
+                    <p id="peRatio" class="value">-</p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Ratio P/B</h3>
+                    <p id="pbRatio" class="value">-</p>
+                </div>
+            </div>
+
+            <div class="recommendation">
+                <h3>Recommandation</h3>
+                <p id="recommendationText"></p>
+            </div>
+
+            <div class="details">
+                <h3>Détails du calcul</h3>
+                <div id="calculationDetails"></div>
+            </div>
+        </div>
+
+        <div class="principles-section">
+            <h2>📚 Les Principes de Graham</h2>
+            <div class="principles-grid">
+                <div class="principle">
+                    <h4>🛡️ Marge de Sécurité</h4>
+                    <p>Achetez avec une décote d'au moins 25-30% par rapport à la valeur intrinsèque</p>
+                </div>
+                <div class="principle">
+                    <h4>📊 Ratio P/E Raisonnable</h4>
+                    <p>Le ratio Prix/Bénéfice ne devrait pas dépasser 15</p>
+                </div>
+                <div class="principle">
+                    <h4>🏦 Ratio P/B Conservateur</h4>
+                    <p>Le ratio Prix/Valeur comptable idéal est inférieur à 1.5</p>
+                </div>
+                <div class="principle">
+                    <h4>💵 Dividende Stable</h4>
+                    <p>Recherchez des entreprises avec un historique de dividendes stable</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
