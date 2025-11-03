@@ -1,4 +1,37 @@
-// Ajouter cette fonction pour gérer les onglets
+// Seuils de référence pour l'analyse
+const SEUILS = {
+    currentRatio: { bon: 1.5, excellent: 2.0 },
+    debtToEquity: { bon: 0.5, excellent: 0.3 },
+    interestCoverage: { bon: 5, excellent: 8 },
+    freeCashFlow: { bon: 0, excellent: 100000 },
+    
+    roe: { bon: 0.15, excellent: 0.20 },
+    roic: { bon: 0.12, excellent: 0.15 },
+    netMargin: { bon: 0.10, excellent: 0.15 },
+    operatingMargin: { bon: 0.15, excellent: 0.20 },
+    
+    peRatio: { bon: 15, excellent: 12 },
+    pegRatio: { bon: 1, excellent: 0.8 },
+    pbRatio: { bon: 1.5, excellent: 1.2 },
+    pfcfRatio: { bon: 20, excellent: 15 },
+    dividendYield: { bon: 0.02, excellent: 0.03 },
+    evEbitda: { bon: 12, excellent: 8 },
+    
+    revenueGrowth: { bon: 0.08, excellent: 0.12 },
+    epsGrowth: { bon: 0.10, excellent: 0.15 },
+    priceVsMA200: { bon: 0, excellent: 0.05 }
+};
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    initTabs();
+    mettreAJourDevise();
+    
+    // Écouter les changements de devise
+    document.getElementById('currency').addEventListener('change', mettreAJourDevise);
+});
+
+// Gestion des onglets
 function initTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -73,6 +106,8 @@ async function simulerImportDonnees(url, annee, devise) {
     if (url.includes('apple')) nomEntreprise = "Apple Inc.";
     if (url.includes('lvmh')) nomEntreprise = "LVMH";
     if (url.includes('airbus')) nomEntreprise = "Airbus";
+    if (url.includes('tesla')) nomEntreprise = "Tesla Inc.";
+    if (url.includes('microsoft')) nomEntreprise = "Microsoft Corp.";
     
     // Facteur de conversion devise (simulé)
     const tauxConversion = obtenirTauxConversion(devise);
@@ -126,56 +161,26 @@ async function simulerImportDonnees(url, annee, devise) {
             revenueGrowth: 2,
             previousEPS: 6.10 * tauxConversion,
             priceVsMA200: 5
-        }
-        // Ajouter d'autres années si nécessaire
-    };
-    
-    return donneesParAnnee[annee] || donneesParAnnee['2023'];
-}
-
-function obtenirTauxConversion(devise) {
-    const taux = {
-        'EUR': 1,
-        'USD': 1.08,
-        'GBP': 0.85,
-        'CHF': 0.95
-    };
-    return taux[devise] || 1;
-}
-
-function preRemplirChamps(donnees) {
-    document.getElementById('companyName').value = donnees.nom;
-    document.getElementById('currentAssets').value = Math.round(donnees.currentAssets);
-    document.getElementById('currentLiabilities').value = Math.round(donnees.currentLiabilities);
-    document.getElementById('totalDebt').value = Math.round(donnees.totalDebt);
-    document.getElementById('shareholdersEquity').value = Math.round(donnees.shareholdersEquity);
-    document.getElementById('ebit').value = Math.round(donnees.ebit);
-    document.getElementById('interestExpense').value = Math.round(donnees.interestExpense);
-    document.getElementById('operatingCashFlow').value = Math.round(donnees.operatingCashFlow);
-    document.getElementById('capitalExpenditures').value = Math.round(donnees.capitalExpenditures);
-    document.getElementById('netIncome').value = Math.round(donnees.netIncome);
-    document.getElementById('revenue').value = Math.round(donnees.revenue);
-    document.getElementById('nopat').value = Math.round(donnees.nopat);
-    document.getElementById('sharePrice').value = Math.round(donnees.sharePrice * 100) / 100;
-    document.getElementById('sharesOutstanding').value = donnees.sharesOutstanding;
-    document.getElementById('bookValuePerShare').value = Math.round(donnees.bookValuePerShare * 100) / 100;
-    document.getElementById('dividendPerShare').value = Math.round(donnees.dividendPerShare * 100) / 100;
-    document.getElementById('epsGrowth').value = donnees.epsGrowth;
-    document.getElementById('ebitda').value = Math.round(donnees.ebitda);
-    document.getElementById('cash').value = Math.round(donnees.cash);
-    document.getElementById('revenueGrowth').value = donnees.revenueGrowth;
-    document.getElementById('previousEPS').value = Math.round(donnees.previousEPS * 100) / 100;
-    document.getElementById('priceVsMA200').value = donnees.priceVsMA200;
-}
-
-// Initialisation
-document.addEventListener('DOMContentLoaded', function() {
-    initTabs();
-    mettreAJourDevise();
-    
-    // Écouter les changements de devise
-    document.getElementById('currency').addEventListener('change', mettreAJourDevise);
-});
-
-// Le reste du code (lancerAnalyse, calculerRatios, etc.) reste identique...
-// ... [Tout le code existant pour l'analyse reste le même] ...
+        },
+        '2022': {
+            nom: nomEntreprise,
+            currentAssets: 125000 * tauxConversion,
+            currentLiabilities: 130000 * tauxConversion,
+            totalDebt: 110000 * tauxConversion,
+            shareholdersEquity: 60000 * tauxConversion,
+            ebit: 110000 * tauxConversion,
+            interestExpense: 2500 * tauxConversion,
+            operatingCashFlow: 105000 * tauxConversion,
+            capitalExpenditures: 9000 * tauxConversion,
+            netIncome: 95000 * tauxConversion,
+            revenue: 365000 * tauxConversion,
+            nopat: 90000 * tauxConversion,
+            sharePrice: 150 * tauxConversion,
+            sharesOutstanding: 16200000000,
+            bookValuePerShare: 3.70 * tauxConversion,
+            dividendPerShare: 0.88 * tauxConversion,
+            epsGrowth: 8,
+            ebitda: 120000 * tauxConversion,
+            cash: 55000 * tauxConversion,
+            revenueGrowth: 6,
+            previousEPS: 5.80 * tauxConversion,
