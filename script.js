@@ -25,35 +25,35 @@ const CONFIG = {
 
     // Sélecteurs spécifiques à Investing.com
     INVESTING_SELECTORS: {
-        companyName: 'h1[data-test="instrument-header-title"]',
+        companyName: 'h1',
         
-        // Données du bilan
-        currentAssets: '[data-test="currentAssets"]',
-        currentLiabilities: '[data-test="currentLiabilities"]',
-        totalDebt: '[data-test="totalDebt"]',
-        shareholdersEquity: '[data-test="totalEquity"]',
-        cash: '[data-test="cashAndShortTermInvestments"]',
+        // Bilan
+        totalAssets: '.financial-section .balance-sheet td:contains("Total Assets") + td',
+        currentAssets: '.financial-section .balance-sheet td:contains("Total Current Assets") + td',
+        currentLiabilities: '.financial-section .balance-sheet td:contains("Total Current Liabilities") + td',
+        totalDebt: '.financial-section .balance-sheet td:contains("Total Debt") + td, .financial-section .balance-sheet td:contains("Long Term Debt") + td',
+        shareholdersEquity: '.financial-section .balance-sheet td:contains("Total Equity") + td, .financial-section .balance-sheet td:contains("Stockholders Equity") + td',
+        cash: '.financial-section .balance-sheet td:contains("Cash") + td, .financial-section .balance-sheet td:contains("Cash & Equivalents") + td',
         
-        // Données du compte de résultat
-        revenue: '[data-test="totalRevenue"]',
-        ebit: '[data-test="ebit"]',
-        ebitda: '[data-test="ebitda"]',
-        netIncome: '[data-test="netIncome"]',
-        interestExpense: '[data-test="interestExpense"]',
+        // Compte de résultat
+        revenue: '.financial-section .income-statement td:contains("Total Revenue") + td, .financial-section .income-statement td:contains("Revenue") + td',
+        ebit: '.financial-section .income-statement td:contains("Operating Income") + td, .financial-section .income-statement td:contains("EBIT") + td',
+        ebitda: '.financial-section .income-statement td:contains("EBITDA") + td',
+        netIncome: '.financial-section .income-statement td:contains("Net Income") + td',
+        interestExpense: '.financial-section .income-statement td:contains("Interest Expense") + td',
         
-        // Données des flux de trésorerie
-        operatingCashFlow: '[data-test="operatingCashFlow"]',
-        capitalExpenditures: '[data-test="capitalExpenditure"]',
+        // Flux de trésorerie
+        operatingCashFlow: '.financial-section .cash-flow td:contains("Operating Cash Flow") + td, .financial-section .cash-flow td:contains("Cash from Operations") + td',
+        capitalExpenditures: '.financial-section .cash-flow td:contains("Capital Expenditures") + td',
         
-        // Données de marché
-        sharePrice: '[data-test="instrument-price-last"]',
-        sharesOutstanding: '[data-test="sharesOutstanding"]',
-        dividendPerShare: '[data-test="dividendPerShare"]',
+        // Données de marché (sur la page principale)
+        sharePrice: '#last_last',
+        marketCap: '.inlineblock span:contains("Market Cap") + span',
         
-        // Ratios et croissance
-        bookValuePerShare: '[data-test="bookValuePerShare"]',
-        epsGrowth: '[data-test="epsGrowth"]',
-        revenueGrowth: '[data-test="revenueGrowth"]'
+        // Ratios
+        peRatio: '.summary div:contains("P/E Ratio") + span',
+        eps: '.summary div:contains("EPS") + span',
+        dividendYield: '.summary div:contains("Dividend Yield") + span'
     },
 
     CATEGORIES: {
@@ -363,13 +363,17 @@ const InvestingScraper = {
 
         try {
             this.setFetchButtonState(fetchBtn, true);
-            Utils.showStatus('Connexion à Investing.com...', 'loading');
+            Utils.showStatus('Tentative de connexion à Investing.com...', 'loading');
 
-            const html = await this.fetchInvestingData(link);
-            const doc = this.parseHTML(html);
+            // Essayer différentes méthodes
+            const data = await this.tryMultipleMethods(link);
             
-            this.extractAndFillData(doc);
-            Utils.showStatus('Données financières récupérées avec succès!', 'success');
+            if (data) {
+                this.fillFormWithData(data);
+                Utils.showStatus('Données récupérées avec succès!', 'success');
+            } else {
+                Utils.showStatus('Impossible de récupérer les données automatiquement. Veuillez les saisir manuellement.', 'info');
+            }
             
         } catch (error) {
             console.error('Erreur lors de la récupération:', error);
@@ -379,27 +383,268 @@ const InvestingScraper = {
         }
     },
 
-    async fetchInvestingData(link) {
-        // Investing.com a une protection CORS stricte, on utilise un proxy
-        const proxyUrl = 'https://api.allorigins.win/raw?url=';
-        const response = await fetch(proxyUrl + encodeURIComponent(link), {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'fr-FR,fr;q=0.8,en-US;q=0.5,en;q=0.3'
+    async tryMultipleMethods(link) {
+        // Méthode 1: API ScrapingBee (plus fiable)
+        try {
+            const data = await this.scrapingBeeMethod(link);
+            if (data) return data;
+        } catch (e) {
+            console.log('Méthode ScrapingBee échouée:', e);
+        }
+
+        // Méthode 2: Proxy classique
+        try {
+            const data = await this.proxyMethod(link);
+            if (data) return data;
+        } catch (e) {
+            console.log('Méthode proxy échouée:', e);
+        }
+
+        return null;
+    },
+
+    async scrapingBeeMethod(link) {
+        // Utiliser ScrapingBee (service payant mais fiable)
+        const apiKey = ''; // À configurer si vous avez un compte
+        if (!apiKey) throw new Error('Clé API ScrapingBee non configurée');
+        
+        const response = await fetch(
+            `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(link)}&render_js=false`
+        );
+        
+        if (!response.ok) throw new Error('ScrapingBee error');
+        
+        const html = await response.text();
+        return this.parseHTMLAndExtractData(html);
+    },
+
+    async proxyMethod(link) {
+        // Essayer différents proxies publics
+        const proxies = [
+            'https://api.allorigins.win/raw?url=',
+            'https://cors-anywhere.herokuapp.com/',
+            'https://corsproxy.io/?'
+        ];
+
+        for (const proxy of proxies) {
+            try {
+                const response = await fetch(proxy + encodeURIComponent(link), {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    },
+                    timeout: 10000
+                });
+
+                if (response.ok) {
+                    const html = await response.text();
+                    return this.parseHTMLAndExtractData(html);
+                }
+            } catch (e) {
+                console.log(`Proxy ${proxy} échoué:`, e);
+                continue;
+            }
+        }
+        
+        throw new Error('Tous les proxies ont échoué');
+    },
+
+    parseHTMLAndExtractData(html) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // Méthode améliorée d'extraction
+        const data = this.extractDataWithFallbacks(doc);
+        
+        // Vérifier si on a récupéré des données significatives
+        const hasValidData = Object.values(data).some(value => value !== null && value !== 0);
+        
+        return hasValidData ? data : null;
+    },
+
+    extractDataWithFallbacks(doc) {
+        const data = {};
+
+        // Extraire le nom de l'entreprise
+        data.companyName = this.extractCompanyName(doc);
+
+        // Extraire les données financières avec différentes méthodes
+        data.revenue = this.extractFinancialData(doc, ['Revenue', 'Total Revenue', 'Sales']);
+        data.netIncome = this.extractFinancialData(doc, ['Net Income', 'Net Profit']);
+        data.ebit = this.extractFinancialData(doc, ['EBIT', 'Operating Income']);
+        data.ebitda = this.extractFinancialData(doc, ['EBITDA']);
+        data.totalAssets = this.extractFinancialData(doc, ['Total Assets']);
+        data.currentAssets = this.extractFinancialData(doc, ['Current Assets', 'Total Current Assets']);
+        data.currentLiabilities = this.extractFinancialData(doc, ['Current Liabilities', 'Total Current Liabilities']);
+        data.totalDebt = this.extractFinancialData(doc, ['Total Debt', 'Long Term Debt']);
+        data.shareholdersEquity = this.extractFinancialData(doc, ['Total Equity', 'Stockholders Equity']);
+        data.cash = this.extractFinancialData(doc, ['Cash', 'Cash & Equivalents']);
+        data.operatingCashFlow = this.extractFinancialData(doc, ['Operating Cash Flow', 'Cash from Operations']);
+        data.capitalExpenditures = this.extractFinancialData(doc, ['Capital Expenditures']);
+        
+        // Données de marché
+        data.sharePrice = this.extractSharePrice(doc);
+        data.marketCap = this.extractMarketCap(doc);
+        data.peRatio = this.extractRatio(doc, ['P/E Ratio', 'P/E']);
+        data.eps = this.extractRatio(doc, ['EPS', 'Earnings Per Share']);
+        data.dividendYield = this.extractRatio(doc, ['Dividend Yield', 'Yield']);
+
+        return data;
+    },
+
+    extractCompanyName(doc) {
+        // Plusieurs méthodes pour trouver le nom
+        const selectors = [
+            'h1',
+            '.instrument-header_title__2r7Xy',
+            '.text-2xl.font-bold',
+            '[data-test="instrument-header-title"]'
+        ];
+
+        for (const selector of selectors) {
+            const element = doc.querySelector(selector);
+            if (element && element.textContent.trim()) {
+                return element.textContent.trim();
+            }
+        }
+
+        return null;
+    },
+
+    extractFinancialData(doc, keywords) {
+        // Chercher dans les tables financières
+        const tables = doc.querySelectorAll('table');
+        
+        for (const table of tables) {
+            const rows = table.querySelectorAll('tr');
+            
+            for (const row of rows) {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 2) {
+                    const label = cells[0].textContent.trim();
+                    
+                    // Vérifier si le label correspond à un des keywords
+                    if (keywords.some(keyword => 
+                        label.toLowerCase().includes(keyword.toLowerCase()))) {
+                        
+                        // Prendre la dernière valeur (la plus récente)
+                        const valueCell = cells[cells.length - 1];
+                        return Utils.parseFinancialText(valueCell.textContent);
+                    }
+                }
+            }
+        }
+        
+        return null;
+    },
+
+    extractSharePrice(doc) {
+        const selectors = [
+            '#last_last',
+            '[data-test="instrument-price-last"]',
+            '.text-5xl.font-bold',
+            '.instrument-price_instrument-price__3uw25'
+        ];
+
+        for (const selector of selectors) {
+            const element = doc.querySelector(selector);
+            if (element) {
+                return Utils.parseFinancialText(element.textContent);
+            }
+        }
+        
+        return null;
+    },
+
+    extractMarketCap(doc) {
+        return this.extractRatio(doc, ['Market Cap', 'Market Capitalization']);
+    },
+
+    extractRatio(doc, keywords) {
+        // Chercher dans les divs de ratio/summary
+        const elements = doc.querySelectorAll('div, span');
+        
+        for (const element of elements) {
+            const text = element.textContent.trim();
+            if (keywords.some(keyword => 
+                text.toLowerCase().includes(keyword.toLowerCase()))) {
+                
+                // Trouver l'élément frère ou parent contenant la valeur
+                const valueElement = element.nextElementSibling || 
+                                   element.parentElement.querySelector('span:last-child');
+                
+                if (valueElement) {
+                    return Utils.parseFinancialText(valueElement.textContent);
+                }
+            }
+        }
+        
+        return null;
+    },
+
+    fillFormWithData(data) {
+        // Remplir le nom de l'entreprise
+        if (data.companyName) {
+            const companyNameInput = document.getElementById('companyName');
+            if (companyNameInput) companyNameInput.value = data.companyName;
+        }
+
+        // Mapper les données aux champs du formulaire
+        const fieldMap = {
+            currentAssets: 'currentAssets',
+            currentLiabilities: 'currentLiabilities', 
+            totalDebt: 'totalDebt',
+            shareholdersEquity: 'shareholdersEquity',
+            cash: 'cash',
+            revenue: 'revenue',
+            ebit: 'ebit',
+            ebitda: 'ebitda',
+            netIncome: 'netIncome',
+            operatingCashFlow: 'operatingCashFlow',
+            capitalExpenditures: 'capitalExpenditures',
+            sharePrice: 'sharePrice'
+        };
+
+        Object.entries(fieldMap).forEach(([dataKey, fieldId]) => {
+            const value = data[dataKey];
+            const input = document.getElementById(fieldId);
+            
+            if (input && value !== null && !isNaN(value)) {
+                input.value = value;
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-
-        return await response.text();
+        // Calculer les valeurs dérivées
+        this.calculateDerivedValues(data);
     },
 
-    parseHTML(html) {
-        const parser = new DOMParser();
-        return parser.parseFromString(html, 'text/html');
+    calculateDerivedValues(data) {
+        // Estimer le nombre d'actions si marketCap et sharePrice sont disponibles
+        if (data.marketCap && data.sharePrice && data.sharePrice > 0) {
+            const sharesOutstanding = data.marketCap / data.sharePrice;
+            const sharesInput = document.getElementById('sharesOutstanding');
+            if (sharesInput) sharesInput.value = Math.round(sharesOutstanding);
+        }
+
+        // Calculer le book value per share
+        if (data.shareholdersEquity && data.marketCap && data.sharePrice) {
+            const shares = data.marketCap / data.sharePrice;
+            const bookValuePerShare = data.shareholdersEquity / shares;
+            const bvpsInput = document.getElementById('bookValuePerShare');
+            if (bvpsInput) bvpsInput.value = Math.round(bookValuePerShare * 100) / 100;
+        }
+
+        // Estimer le NOPAT (EBIT * 0.75 pour 25% d'impôt)
+        if (data.ebit) {
+            const nopatInput = document.getElementById('nopat');
+            if (nopatInput) nopatInput.value = Math.round(data.ebit * 0.75);
+        }
+
+        // Remplir le P/E ratio si disponible
+        if (data.peRatio) {
+            const peInput = document.getElementById('peRatio');
+            if (peInput) peInput.value = data.peRatio;
+        }
     },
 
     setFetchButtonState(button, isLoading) {
@@ -411,77 +656,6 @@ const InvestingScraper = {
         } else {
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-download"></i> Récupérer les données financières';
-        }
-    },
-
-    extractAndFillData(doc) {
-        // Récupérer le nom de l'entreprise
-        const companyNameElement = doc.querySelector(CONFIG.INVESTING_SELECTORS.companyName);
-        if (companyNameElement) {
-            const companyNameInput = document.getElementById('companyName');
-            if (companyNameInput) {
-                companyNameInput.value = companyNameElement.textContent.trim();
-            }
-        }
-
-        // Fonction helper pour extraire une donnée
-        const extractData = (field, isPercentage = false) => {
-            const selector = CONFIG.INVESTING_SELECTORS[field];
-            if (!selector) return null;
-
-            const element = doc.querySelector(selector);
-            if (!element) return null;
-
-            return Utils.parseFinancialText(element.textContent, isPercentage);
-        };
-
-        // Extraire et remplir les données de base
-        const financialData = {
-            // Données du bilan
-            currentAssets: extractData('currentAssets'),
-            currentLiabilities: extractData('currentLiabilities'),
-            totalDebt: extractData('totalDebt'),
-            shareholdersEquity: extractData('shareholdersEquity'),
-            cash: extractData('cash'),
-            
-            // Données du compte de résultat
-            revenue: extractData('revenue'),
-            ebit: extractData('ebit'),
-            ebitda: extractData('ebitda'),
-            netIncome: extractData('netIncome'),
-            interestExpense: extractData('interestExpense'),
-            
-            // Données des flux de trésorerie
-            operatingCashFlow: extractData('operatingCashFlow'),
-            capitalExpenditures: extractData('capitalExpenditures'),
-            
-            // Données de marché
-            sharePrice: extractData('sharePrice'),
-            sharesOutstanding: extractData('sharesOutstanding'),
-            dividendPerShare: extractData('dividendPerShare'),
-            
-            // Ratios
-            bookValuePerShare: extractData('bookValuePerShare'),
-            epsGrowth: extractData('epsGrowth', true),
-            revenueGrowth: extractData('revenueGrowth', true)
-        };
-
-        // Remplir les champs du formulaire
-        Object.entries(financialData).forEach(([field, value]) => {
-            const input = document.getElementById(field);
-            if (input && value !== null && !isNaN(value)) {
-                input.value = value;
-            }
-        });
-
-        // Calculer le NOPAT (EBIT * (1 - taux d'imposition))
-        // Pour une estimation simple, on utilise un taux d'imposition de 25%
-        const ebitValue = financialData.ebit;
-        if (ebitValue !== null && !isNaN(ebitValue)) {
-            const nopatInput = document.getElementById('nopat');
-            if (nopatInput) {
-                nopatInput.value = Math.round(ebitValue * 0.75);
-            }
         }
     }
 };
@@ -570,9 +744,10 @@ document.addEventListener('DOMContentLoaded', function() {
     UI.initYearSelector();
     UI.toggleQuarterField();
     
-    // Écouteur pour la touche Entrée sur le lien Investing
+    // Mettre à jour le placeholder du champ lien
     const investingLink = document.getElementById('investingLink');
     if (investingLink) {
+        investingLink.placeholder = "https://www.investing.com/equities/...";
         investingLink.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 InvestingScraper.recupererDonneesFinancieres();
