@@ -1,3 +1,32 @@
+// Initialiser les années dans le sélecteur
+function initYearSelector() {
+    const yearSelect = document.getElementById('dataYear');
+    const currentYear = new Date().getFullYear();
+    
+    // Générer les 5 dernières années
+    for (let i = currentYear; i >= currentYear - 4; i--) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        if (i === currentYear) {
+            option.selected = true;
+        }
+        yearSelect.appendChild(option);
+    }
+}
+
+// Afficher/masquer le champ trimestre
+function toggleQuarterField() {
+    const periodType = document.getElementById('periodType').value;
+    const quarterField = document.getElementById('quarterField');
+    
+    if (periodType === 'quarterly') {
+        quarterField.style.display = 'block';
+    } else {
+        quarterField.style.display = 'none';
+    }
+}
+
 // Ajouter cette fonction pour gérer les onglets
 function initTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -49,7 +78,7 @@ function lancerAnalyse() {
     const ratios = calculerRatios(inputs);
     const scores = calculerScores(ratios);
     
-    afficherResultats(inputs.companyName, inputs.dataDate, ratios, scores);
+    afficherResultats(inputs.companyName, inputs.periodDisplay, ratios, scores);
     afficherScores(scores);
     genererConclusion(scores);
     
@@ -57,8 +86,23 @@ function lancerAnalyse() {
     document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
 }
 
+// Ajoutez l'initialisation au DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    initTabs();
+    initYearSelector();
+    toggleQuarterField(); // Initialiser l'état du champ trimestre
+});
+
 function getInputValues() {
-    // Même fonction que précédemment
+    const periodType = document.getElementById('periodType').value;
+    const year = document.getElementById('dataYear').value;
+    const quarter = document.getElementById('dataQuarter').value;
+    
+    let periodDisplay = `année ${year}`;
+    if (periodType === 'quarterly') {
+        periodDisplay = `${quarter} ${year}`;
+    }
+    
     return {
         currentAssets: parseFloat(document.getElementById('currentAssets').value) || 0,
         currentLiabilities: parseFloat(document.getElementById('currentLiabilities').value) || 0,
@@ -86,7 +130,10 @@ function getInputValues() {
         priceVsMA200: parseFloat(document.getElementById('priceVsMA200').value) || 0,
         
         companyName: document.getElementById('companyName').value || "Entreprise sans nom",
-        dataDate: document.getElementById('dataDate').value || new Date().toISOString().substring(0, 7)
+        periodType: periodType,
+        year: year,
+        quarter: quarter,
+        periodDisplay: periodDisplay
     };
 }
 
@@ -189,16 +236,9 @@ function afficherScores(scores) {
     document.getElementById('growthValue').textContent = scores.croissance + '%';
 }
 
-function afficherResultats(companyName, dataDate, ratios, scores) {
+function afficherResultats(companyName, periodDisplay, ratios, scores) {
     document.getElementById('resultsCompanyName').textContent = companyName;
-    
-    // Formater la date pour l'affichage (ex: "décembre 2023")
-    const dateObj = new Date(dataDate + '-01');
-    const formattedDate = dateObj.toLocaleDateString('fr-FR', { 
-        year: 'numeric', 
-        month: 'long' 
-    });
-    document.getElementById('resultsDataDate').textContent = formattedDate;
+    document.getElementById('resultsPeriod').textContent = periodDisplay;
     
     const tableHTML = `
         <table>
