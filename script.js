@@ -1,141 +1,262 @@
-function calculateGraham() {
-    // Récupération des valeurs saisies
-    const companyName = document.getElementById('companyName').value || "l'entreprise";
-    const stockPrice = parseFloat(document.getElementById('stockPrice').value);
-    const eps = parseFloat(document.getElementById('eps').value);
-    const bookValue = parseFloat(document.getElementById('bookValue').value);
-    const growthRate = parseFloat(document.getElementById('growthRate').value) / 100;
-    const dividend = parseFloat(document.getElementById('dividend').value) || 0;
-
-    // Validation des données
-    if (!stockPrice || !eps || !bookValue || isNaN(growthRate)) {
-        alert("Veuillez remplir tous les champs obligatoires");
-        return;
-    }
-
-    // Calculs selon la méthode Graham
-    const intrinsicValue = calculateIntrinsicValue(eps, growthRate);
-    const marginSafety = ((intrinsicValue - stockPrice) / intrinsicValue * 100);
-    const peRatio = stockPrice / eps;
-    const pbRatio = stockPrice / bookValue;
-    const dividendYield = (dividend / stockPrice * 100);
-
-    // Affichage des résultats
-    displayResults(companyName, intrinsicValue, marginSafety, peRatio, pbRatio, dividendYield);
+// Seuils de référence pour l'analyse
+const SEUILS = {
+    // Santé Financière
+    currentRatio: { bon: 1.5, excellent: 2.0 },
+    debtToEquity: { bon: 0.5, excellent: 0.3 },
+    interestCoverage: { bon: 5, excellent: 8 },
+    freeCashFlow: { bon: 0, excellent: 0 }, // Doit être positif
     
-    // Affichage de la section résultats
-    document.getElementById('results').style.display = 'block';
+    // Rentabilité
+    roe: { bon: 0.15, excellent: 0.20 },
+    roic: { bon: 0.12, excellent: 0.15 },
+    netMargin: { bon: 0.10, excellent: 0.15 },
+    operatingMargin: { bon: 0.15, excellent: 0.20 },
+    
+    // Évaluation
+    peRatio: { bon: 15, excellent: 12 },
+    pegRatio: { bon: 1, excellent: 0.8 },
+    pbRatio: { bon: 1.5, excellent: 1.2 },
+    pfcfRatio: { bon: 20, excellent: 15 },
+    dividendYield: { bon: 0.02, excellent: 0.03 }, // 2-3%
+    evEbitda: { bon: 12, excellent: 8 },
+    
+    // Croissance
+    revenueGrowth: { bon: 0.08, excellent: 0.12 }, // 8-12%
+    epsGrowth: { bon: 0.10, excellent: 0.15 }, // 10-15%
+    priceVsMA200: { bon: 0, excellent: 0 } // Prix > MM200
+};
+
+function lancerAnalyse() {
+    // Récupérer toutes les valeurs des inputs
+    const inputs = getInputValues();
+    
+    // Calculer tous les ratios
+    const ratios = calculerRatios(inputs);
+    
+    // Afficher les résultats
+    afficherResultats(inputs.companyName, ratios);
+    
+    // Générer la conclusion
+    genererConclusion(ratios);
 }
 
-function calculateIntrinsicValue(eps, growthRate) {
-    // Formule de Graham : V = EPS * (8.5 + 2*g)
-    // où g est le taux de croissance attendu pour les 7-10 prochaines années
-    const grahamFormula = eps * (8.5 + 2 * growthRate * 100);
-    
-    // Ajustement conservateur : on prend le minimum entre la formule et 20x le EPS
-    const conservativeValue = eps * 20;
-    
-    return Math.min(grahamFormula, conservativeValue);
+function getInputValues() {
+    return {
+        // Santé Financière
+        currentAssets: parseFloat(document.getElementById('currentAssets').value) || 0,
+        currentLiabilities: parseFloat(document.getElementById('currentLiabilities').value) || 0,
+        totalDebt: parseFloat(document.getElementById('totalDebt').value) || 0,
+        shareholdersEquity: parseFloat(document.getElementById('shareholdersEquity').value) || 0,
+        ebit: parseFloat(document.getElementById('ebit').value) || 0,
+        interestExpense: parseFloat(document.getElementById('interestExpense').value) || 0,
+        operatingCashFlow: parseFloat(document.getElementById('operatingCashFlow').value) || 0,
+        capitalExpenditures: parseFloat(document.getElementById('capitalExpenditures').value) || 0,
+        
+        // Rentabilité
+        netIncome: parseFloat(document.getElementById('netIncome').value) || 0,
+        revenue: parseFloat(document.getElementById('revenue').value) || 0,
+        nopat: parseFloat(document.getElementById('nopat').value) || 0,
+        
+        // Évaluation
+        sharePrice: parseFloat(document.getElementById('sharePrice').value) || 0,
+        sharesOutstanding: parseFloat(document.getElementById('sharesOutstanding').value) || 0,
+        bookValuePerShare: parseFloat(document.getElementById('bookValuePerShare').value) || 0,
+        dividendPerShare: parseFloat(document.getElementById('dividendPerShare').value) || 0,
+        epsGrowth: parseFloat(document.getElementById('epsGrowth').value) || 0,
+        ebitda: parseFloat(document.getElementById('ebitda').value) || 0,
+        cash: parseFloat(document.getElementById('cash').value) || 0,
+        
+        // Croissance
+        revenueGrowth: parseFloat(document.getElementById('revenueGrowth').value) || 0,
+        previousEPS: parseFloat(document.getElementById('previousEPS').value) || 0,
+        priceVsMA200: parseFloat(document.getElementById('priceVsMA200').value) || 0,
+        
+        companyName: document.getElementById('companyName').value || "Entreprise sans nom"
+    };
 }
 
-function displayResults(companyName, intrinsicValue, marginSafety, peRatio, pbRatio, dividendYield) {
-    // Formatage des valeurs
-    document.getElementById('intrinsicValue').textContent = `$${intrinsicValue.toFixed(2)}`;
-    document.getElementById('marginSafety').textContent = `${marginSafety.toFixed(1)}%`;
-    document.getElementById('peRatio').textContent = peRatio.toFixed(1);
-    document.getElementById('pbRatio').textContent = pbRatio.toFixed(1);
-
-    // Application des couleurs selon les critères
-    applyColorIndicator('marginSafety', marginSafety, 25, 15);
-    applyColorIndicator('peRatio', peRatio, 15, 20, true);
-    applyColorIndicator('pbRatio', pbRatio, 1.5, 2.5, true);
-
-    // Génération de la recommandation
-    generateRecommendation(companyName, intrinsicValue, marginSafety, peRatio, pbRatio, dividendYield);
+function calculerRatios(inputs) {
+    const marketCap = inputs.sharePrice * inputs.sharesOutstanding;
+    const enterpriseValue = marketCap + inputs.totalDebt - inputs.cash;
+    const currentEPS = inputs.netIncome / inputs.sharesOutstanding;
+    const peRatio = inputs.sharePrice / currentEPS;
     
-    // Détails du calcul
-    showCalculationDetails(intrinsicValue, marginSafety);
+    return {
+        // Santé Financière
+        currentRatio: inputs.currentAssets / inputs.currentLiabilities,
+        debtToEquity: inputs.totalDebt / inputs.shareholdersEquity,
+        interestCoverage: inputs.ebit / inputs.interestExpense,
+        freeCashFlow: inputs.operatingCashFlow - inputs.capitalExpenditures,
+        
+        // Rentabilité
+        roe: inputs.netIncome / inputs.shareholdersEquity,
+        roic: inputs.nopat / (inputs.totalDebt + inputs.shareholdersEquity),
+        netMargin: inputs.netIncome / inputs.revenue,
+        operatingMargin: inputs.ebit / inputs.revenue,
+        
+        // Évaluation
+        peRatio: peRatio,
+        pegRatio: peRatio / inputs.epsGrowth,
+        pbRatio: inputs.sharePrice / inputs.bookValuePerShare,
+        pfcfRatio: marketCap / (inputs.operatingCashFlow - inputs.capitalExpenditures),
+        dividendYield: inputs.dividendPerShare / inputs.sharePrice,
+        evEbitda: enterpriseValue / inputs.ebitda,
+        
+        // Croissance
+        revenueGrowth: inputs.revenueGrowth / 100,
+        epsGrowth: inputs.epsGrowth / 100,
+        priceVsMA200: inputs.priceVsMA200 / 100
+    };
 }
 
-function applyColorIndicator(elementId, value, goodThreshold, warningThreshold, reverse = false) {
-    const element = document.getElementById(elementId);
+function afficherResultats(companyName, ratios) {
+    document.getElementById('resultsCompanyName').textContent = companyName;
     
-    if (reverse) {
-        // Pour P/E et P/B : plus la valeur est basse, mieux c'est
-        if (value <= goodThreshold) {
-            element.className = 'value good';
-        } else if (value <= warningThreshold) {
-            element.className = 'value warning';
-        } else {
-            element.className = 'value bad';
-        }
-    } else {
-        // Pour marge de sécurité : plus la valeur est haute, mieux c'est
-        if (value >= goodThreshold) {
-            element.className = 'value good';
-        } else if (value >= warningThreshold) {
-            element.className = 'value warning';
-        } else {
-            element.className = 'value bad';
-        }
-    }
-}
-
-function generateRecommendation(companyName, intrinsicValue, marginSafety, peRatio, pbRatio, dividendYield) {
-    let recommendation = "";
-    let score = 0;
-
-    // Calcul du score basé sur les critères de Graham
-    if (marginSafety >= 25) score += 2;
-    else if (marginSafety >= 15) score += 1;
-
-    if (peRatio <= 15) score += 2;
-    else if (peRatio <= 20) score += 1;
-
-    if (pbRatio <= 1.5) score += 2;
-    else if (pbRatio <= 2.5) score += 1;
-
-    // Génération du texte de recommandation
-    if (score >= 5) {
-        recommendation = `✅ <strong>EXCELLENTE OPPORTUNITÉ</strong> - ${companyName} présente toutes les caractéristiques d'un bon investissement selon Graham. La marge de sécurité est solide et les ratios sont attractifs.`;
-    } else if (score >= 3) {
-        recommendation = `⚠️ <strong>OPPORTUNITÉ MODÉRÉE</strong> - ${companyName} montre certains signes positifs mais nécessite une analyse plus approfondie. Certains ratios pourraient être améliorés.`;
-    } else {
-        recommendation = `❌ <strong>NON CONFORME</strong> - ${companyName} ne répond pas aux critères stricts de Graham. Les ratios sont élevés et la marge de sécurité est insuffisante.`;
-    }
-
-    // Ajout des détails spécifiques
-    recommendation += `<br><br><strong>Points clés :</strong><ul>`;
-    recommendation += `<li>Marge de sécurité : ${marginSafety >= 25 ? '✅ Excellente' : marginSafety >= 15 ? '⚠️ Acceptable' : '❌ Insuffisante'}</li>`;
-    recommendation += `<li>Ratio P/E : ${peRatio <= 15 ? '✅ Très bon' : peRatio <= 20 ? '⚠️ Acceptable' : '❌ Trop élevé'}</li>`;
-    recommendation += `<li>Ratio P/B : ${pbRatio <= 1.5 ? '✅ Très bon' : pbRatio <= 2.5 ? '⚠️ Acceptable' : '❌ Trop élevé'}</li>`;
-    recommendation += `</ul>`;
-
-    document.getElementById('recommendationText').innerHTML = recommendation;
-}
-
-function showCalculationDetails(intrinsicValue, marginSafety) {
-    const details = `
-        <p><strong>Méthodologie utilisée :</strong></p>
-        <ul>
-            <li><strong>Formule de Graham :</strong> V = EPS × (8.5 + 2g) où g est le taux de croissance</li>
-            <li><strong>Valeur intrinsèque calculée :</strong> $${intrinsicValue.toFixed(2)}</li>
-            <li><strong>Marge de sécurité :</strong> ${marginSafety.toFixed(1)}% (cible minimum: 25%)</li>
-            <li><strong>Seuils Graham :</strong> P/E ≤ 15, P/B ≤ 1.5, Marge ≥ 25%</li>
-        </ul>
-        <p><em>Note : Ce calcul est une estimation. Une analyse plus approfondie est recommandée.</em></p>
+    const tableHTML = `
+        <table class="ratio-table">
+            <thead>
+                <tr>
+                    <th>Catégorie</th>
+                    <th>Ratio</th>
+                    <th>Valeur Calculée</th>
+                    <th>Seuil "Bon"</th>
+                    <th>Verdict</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${genererLignesTableau(ratios)}
+            </tbody>
+        </table>
     `;
     
-    document.getElementById('calculationDetails').innerHTML = details;
+    document.getElementById('resultsTable').innerHTML = tableHTML;
+    document.getElementById('resultsSection').style.display = 'block';
 }
 
-// Exemple de données pré-remplies pour démonstration
-document.addEventListener('DOMContentLoaded', function() {
-    // Pré-remplissage avec des valeurs d'exemple
-    document.getElementById('companyName').value = "Entreprise Example";
-    document.getElementById('stockPrice').value = "120";
-    document.getElementById('eps').value = "8.50";
-    document.getElementById('bookValue').value = "65.00";
-    document.getElementById('growthRate').value = "7.5";
-    document.getElementById('dividend').value = "2.50";
-});
+function genererLignesTableau(ratios) {
+    const categories = {
+        "Santé Financière": [
+            { nom: "Current Ratio", valeur: ratios.currentRatio, seuil: SEUILS.currentRatio, format: (v) => v.toFixed(2) },
+            { nom: "Dette/Capitaux Propres", valeur: ratios.debtToEquity, seuil: SEUILS.debtToEquity, format: (v) => v.toFixed(2) },
+            { nom: "Couverture des Intérêts", valeur: ratios.interestCoverage, seuil: SEUILS.interestCoverage, format: (v) => v.toFixed(1) },
+            { nom: "Free Cash Flow (€)", valeur: ratios.freeCashFlow, seuil: SEUILS.freeCashFlow, format: (v) => v.toLocaleString('fr-FR') }
+        ],
+        "Rentabilité": [
+            { nom: "ROE", valeur: ratios.roe, seuil: SEUILS.roe, format: (v) => (v * 100).toFixed(1) + "%" },
+            { nom: "ROIC", valeur: ratios.roic, seuil: SEUILS.roic, format: (v) => (v * 100).toFixed(1) + "%" },
+            { nom: "Marge Nette", valeur: ratios.netMargin, seuil: SEUILS.netMargin, format: (v) => (v * 100).toFixed(1) + "%" },
+            { nom: "Marge d'Exploitation", valeur: ratios.operatingMargin, seuil: SEUILS.operatingMargin, format: (v) => (v * 100).toFixed(1) + "%" }
+        ],
+        "Évaluation": [
+            { nom: "P/E Ratio", valeur: ratios.peRatio, seuil: SEUILS.peRatio, format: (v) => v.toFixed(1) },
+            { nom: "PEG Ratio", valeur: ratios.pegRatio, seuil: SEUILS.pegRatio, format: (v) => v.toFixed(2) },
+            { nom: "P/B Ratio", valeur: ratios.pbRatio, seuil: SEUILS.pbRatio, format: (v) => v.toFixed(2) },
+            { nom: "P/FCF Ratio", valeur: ratios.pfcfRatio, seuil: SEUILS.pfcfRatio, format: (v) => v.toFixed(1) },
+            { nom: "Rendement Dividende", valeur: ratios.dividendYield, seuil: SEUILS.dividendYield, format: (v) => (v * 100).toFixed(2) + "%" },
+            { nom: "EV/EBITDA", valeur: ratios.evEbitda, seuil: SEUILS.evEbitda, format: (v) => v.toFixed(1) }
+        ],
+        "Croissance": [
+            { nom: "Croissance CA", valeur: ratios.revenueGrowth, seuil: SEUILS.revenueGrowth, format: (v) => (v * 100).toFixed(1) + "%" },
+            { nom: "Croissance BPA", valeur: ratios.epsGrowth, seuil: SEUILS.epsGrowth, format: (v) => (v * 100).toFixed(1) + "%" },
+            { nom: "Prix vs MM200", valeur: ratios.priceVsMA200, seuil: SEUILS.priceVsMA200, format: (v) => (v * 100).toFixed(1) + "%" }
+        ]
+    };
+
+    let html = '';
+    
+    for (const [categorie, ratiosCategorie] of Object.entries(categories)) {
+        // Ligne de catégorie
+        html += `<tr class="category-row"><td colspan="5"><strong>${categorie}</strong></td></tr>`;
+        
+        // Lignes de ratios
+        ratiosCategorie.forEach(ratio => {
+            const valeurFormatee = ratio.format(ratio.valeur);
+            const seuilFormate = ratio.seuil.bon;
+            const verdict = getVerdict(ratio.valeur, ratio.seuil, ratio.nom);
+            const classe = getClasseVerdict(verdict);
+            
+            html += `
+                <tr class="${classe}">
+                    <td>${categorie}</td>
+                    <td>${ratio.nom}</td>
+                    <td>${valeurFormatee}</td>
+                    <td>${seuilFormate}</td>
+                    <td><strong>${verdict}</strong></td>
+                </tr>
+            `;
+        });
+    }
+    
+    return html;
+}
+
+function getVerdict(valeur, seuil, nomRatio) {
+    // Logique spéciale pour certains ratios où "moins est mieux"
+    const ratiosInverses = ['debtToEquity', 'peRatio', 'pegRatio', 'pbRatio', 'pfcfRatio', 'evEbitda'];
+    
+    if (ratiosInverses.includes(nomRatio.toLowerCase().replace(/[^a-zA-Z]/g, ''))) {
+        if (valeur <= seuil.excellent) return 'EXCELLENT';
+        if (valeur <= seuil.bon) return 'BON';
+        return 'MAUVAIS';
+    }
+    
+    // Logique normale (plus c'est haut, mieux c'est)
+    if (valeur >= seuil.excellent) return 'EXCELLENT';
+    if (valeur >= seuil.bon) return 'BON';
+    return 'MAUVAIS';
+}
+
+function getClasseVerdict(verdict) {
+    switch(verdict) {
+        case 'EXCELLENT': return 'ratio-good';
+        case 'BON': return 'ratio-neutral';
+        case 'MAUVAIS': return 'ratio-bad';
+        default: return '';
+    }
+}
+
+function genererConclusion(ratios) {
+    const bonsRatios = Object.values(ratios).filter(ratio => 
+        ratio >= Object.values(SEUILS).find(s => s.bon).bon
+    ).length;
+    
+    const totalRatios = Object.keys(ratios).length;
+    const pourcentageBons = (bonsRatios / totalRatios) * 100;
+    
+    let conclusionHTML = '';
+    let conclusionClasse = '';
+    
+    if (pourcentageBons >= 70) {
+        conclusionClasse = 'conclusion-good';
+        conclusionHTML = `
+            <div class="conclusion ${conclusionClasse}">
+                <h3>🚀 ANALYSE POSITIVE - ACTION INTÉRESSANTE</h3>
+                <p><strong>${pourcentageBons.toFixed(0)}% des indicateurs sont au vert.</strong></p>
+                <p>L'entreprise montre une santé financière solide, une rentabilité correcte et une évaluation raisonnable.</p>
+                <p><em>Recommandation : À étudier sérieusement pour un investissement.</em></p>
+            </div>
+        `;
+    } else if (pourcentageBons >= 50) {
+        conclusionClasse = 'conclusion-neutral';
+        conclusionHTML = `
+            <div class="conclusion ${conclusionClasse}">
+                <h3>⚠️ ANALYSE MITIGÉE - À APPROFONDIR</h3>
+                <p><strong>${pourcentageBons.toFixed(0)}% des indicateurs sont acceptables.</strong></p>
+                <p>L'entreprise présente des points forts mais aussi des faiblesses significatives.</p>
+                <p><em>Recommandation : Analyser plus en détail les points faibles avant toute décision.</em></p>
+            </div>
+        `;
+    } else {
+        conclusionClasse = 'conclusion-bad';
+        conclusionHTML = `
+            <div class="conclusion ${conclusionClasse}">
+                <h3>💀 ANALYSE NÉGATIVE - FUIR</h3>
+                <p><strong>Seulement ${pourcentageBons.toFixed(0)}% des indicateurs sont bons.</strong></p>
+                <p>L'entreprise présente trop de risques : santé financière fragile, rentabilité faible ou évaluation trop élevée.</p>
+                <p><em>Recommandation : Éviter cette action. Il y a de meilleures opportunités sur le marché.</em></p>
+            </div>
+        `;
+    }
+    
+    document.getElementById('conclusion').innerHTML = conclusionHTML;
+}
