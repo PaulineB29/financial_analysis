@@ -467,3 +467,35 @@ body {
         font-size: 2rem;
     }
 }
+/* Style pour la date */
+.date-info {
+    color: var(--primary);
+    font-weight: 600;
+    font-style: italic;
+}
+
+/* Style pour le champ date */
+.input-group input[type="month"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.input-group input[type="month"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+/* Amélioration responsive pour la date dans les résultats */
+@media (max-width: 768px) {
+    .section-header p {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}
