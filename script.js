@@ -49,7 +49,7 @@ function lancerAnalyse() {
     const ratios = calculerRatios(inputs);
     const scores = calculerScores(ratios);
     
-    afficherResultats(inputs.companyName, ratios, scores);
+    afficherResultats(inputs.companyName, inputs.dataDate, ratios, scores);
     afficherScores(scores);
     genererConclusion(scores);
     
@@ -85,7 +85,8 @@ function getInputValues() {
         previousEPS: parseFloat(document.getElementById('previousEPS').value) || 0,
         priceVsMA200: parseFloat(document.getElementById('priceVsMA200').value) || 0,
         
-        companyName: document.getElementById('companyName').value || "Entreprise sans nom"
+        companyName: document.getElementById('companyName').value || "Entreprise sans nom",
+        dataDate: document.getElementById('dataDate').value || new Date().toISOString().substring(0, 7)
     };
 }
 
@@ -188,8 +189,16 @@ function afficherScores(scores) {
     document.getElementById('growthValue').textContent = scores.croissance + '%';
 }
 
-function afficherResultats(companyName, ratios, scores) {
+function afficherResultats(companyName, dataDate, ratios, scores) {
     document.getElementById('resultsCompanyName').textContent = companyName;
+    
+    // Formater la date pour l'affichage (ex: "décembre 2023")
+    const dateObj = new Date(dataDate + '-01');
+    const formattedDate = dateObj.toLocaleDateString('fr-FR', { 
+        year: 'numeric', 
+        month: 'long' 
+    });
+    document.getElementById('resultsDataDate').textContent = formattedDate;
     
     const tableHTML = `
         <table>
