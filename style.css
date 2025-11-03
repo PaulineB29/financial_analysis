@@ -499,3 +499,127 @@ body {
         gap: 0.25rem;
     }
 }
+/* Styles pour les sélecteurs de période */
+.input-group select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: white;
+    cursor: pointer;
+}
+
+.input-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+/* Animation pour l'apparition du champ trimestre */
+#quarterField {
+    transition: all 0.3s ease;
+}
+
+/* Style pour l'affichage de la période dans les résultats */
+.date-info {
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--background);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
+/* Amélioration responsive */
+@media (max-width: 768px) {
+    .company-basic {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .input-group {
+        margin-bottom: 1rem;
+    }
+}
+/* Styles pour le bouton de récupération */
+.fetch-btn {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.fetch-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px #10b981;
+}
+
+.fetch-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Styles pour le statut de récupération */
+.fetch-status {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.fetch-status.loading {
+    background: #fffbeb;
+    color: #f59e0b;
+    border: 1px solid #fcd34d;
+}
+
+.fetch-status.success {
+    background: #f0fdf4;
+    color: #10b981;
+    border: 1px solid #86efac;
+}
+
+.fetch-status.error {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fca5a5;
+}
+
+.fetch-status.info {
+    background: #eff6ff;
+    color: #3b82f6;
+    border: 1px solid #93c5fd;
+}
+
+/* Style pour le champ lien */
+.input-group input[type="url"] {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+/* Animation de pulsation pour le chargement */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.fa-spin {
+    animation: pulse 1.5s ease-in-out infinite;
+}
