@@ -81,7 +81,7 @@ body {
     width: 100%;
 }
 
-/* Cartes */
+/* Cartes et sections communes */
 .card {
     background: var(--surface);
     border-radius: var(--radius);
@@ -91,7 +91,6 @@ body {
     border: 1px solid var(--border);
 }
 
-/* En-têtes de section */
 .section-header {
     margin-bottom: 2rem;
     text-align: center;
@@ -112,7 +111,7 @@ body {
     font-size: 1.1rem;
 }
 
-/* Formulaire */
+/* Composants de formulaire */
 .company-basic {
     margin-bottom: 2rem;
 }
@@ -131,19 +130,27 @@ body {
     gap: 0.5rem;
 }
 
-.input-group input {
+.input-group input,
+.input-group select {
     width: 100%;
     padding: 0.75rem 1rem;
     border: 2px solid var(--border);
     border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
+    background-color: white;
 }
 
-.input-group input:focus {
+.input-group input:focus,
+.input-group select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.input-group input[type="url"] {
+    font-family: monospace;
+    font-size: 0.9rem;
 }
 
 .input-group small {
@@ -151,6 +158,51 @@ body {
     margin-top: 0.25rem;
     color: var(--text-light);
     font-size: 0.875rem;
+}
+
+/* Boutons */
+.analyze-btn,
+.fetch-btn {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.analyze-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    font-size: 1.25rem;
+    padding: 1.25rem 2rem;
+    margin-top: 2rem;
+}
+
+.analyze-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px var(--primary);
+}
+
+.fetch-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.fetch-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px #10b981;
+}
+
+.fetch-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Onglets */
@@ -203,31 +255,7 @@ body {
     gap: 1.5rem;
 }
 
-/* Bouton d'analyse */
-.analyze-btn {
-    width: 100%;
-    padding: 1.25rem 2rem;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 1.25rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    margin-top: 2rem;
-}
-
-.analyze-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px -8px var(--primary);
-}
-
-/* Résultats */
+/* Résultats et scores */
 .results-section {
     animation: fadeIn 0.5s ease;
 }
@@ -237,12 +265,19 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.company-name {
+.company-name,
+.date-info {
     color: var(--primary);
     font-weight: 700;
 }
 
-/* Score Summary */
+.date-info {
+    background: var(--background);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
 .score-summary {
     display: grid;
     grid-template-columns: 300px 1fr;
@@ -292,7 +327,6 @@ body {
     color: var(--text-light);
 }
 
-/* Breakdown */
 .score-breakdown {
     display: flex;
     flex-direction: column;
@@ -332,7 +366,7 @@ body {
     text-align: right;
 }
 
-/* Tableau des résultats */
+/* Tableaux */
 .table-container {
     overflow-x: auto;
 }
@@ -361,7 +395,7 @@ body {
     background: var(--background);
 }
 
-/* Indicateurs de performance */
+/* États et indicateurs */
 .ratio-excellent {
     background: #f0fdf4 !important;
     color: var(--success) !important;
@@ -380,7 +414,40 @@ body {
     font-weight: 600;
 }
 
-/* Conclusion */
+.fetch-status {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.fetch-status.loading {
+    background: #fffbeb;
+    color: #f59e0b;
+    border: 1px solid #fcd34d;
+}
+
+.fetch-status.success {
+    background: #f0fdf4;
+    color: #10b981;
+    border: 1px solid #86efac;
+}
+
+.fetch-status.error {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fca5a5;
+}
+
+.fetch-status.info {
+    background: #eff6ff;
+    color: #3b82f6;
+    border: 1px solid #93c5fd;
+}
+
+/* Conclusions */
 .conclusion-card {
     padding: 2rem;
     border-radius: var(--radius);
@@ -435,6 +502,21 @@ body {
     opacity: 0.7;
 }
 
+/* Utilitaires */
+#quarterField {
+    transition: all 0.3s ease;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.fa-spin {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .main-content {
@@ -466,74 +548,7 @@ body {
     .logo h1 {
         font-size: 2rem;
     }
-}
-/* Style pour la date */
-.date-info {
-    color: var(--primary);
-    font-weight: 600;
-    font-style: italic;
-}
 
-/* Style pour le champ date */
-.input-group input[type="month"] {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    font-family: inherit;
-}
-
-.input-group input[type="month"]:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
-}
-
-/* Amélioration responsive pour la date dans les résultats */
-@media (max-width: 768px) {
-    .section-header p {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-}
-/* Styles pour les sélecteurs de période */
-.input-group select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background-color: white;
-    cursor: pointer;
-}
-
-.input-group select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
-}
-
-/* Animation pour l'apparition du champ trimestre */
-#quarterField {
-    transition: all 0.3s ease;
-}
-
-/* Style pour l'affichage de la période dans les résultats */
-.date-info {
-    color: var(--primary);
-    font-weight: 600;
-    background: var(--background);
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-}
-
-/* Amélioration responsive */
-@media (max-width: 768px) {
     .company-basic {
         display: flex;
         flex-direction: column;
@@ -543,83 +558,10 @@ body {
     .input-group {
         margin-bottom: 1rem;
     }
-}
-/* Styles pour le bouton de récupération */
-.fetch-btn {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
 
-.fetch-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px -8px #10b981;
-}
-
-.fetch-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Styles pour le statut de récupération */
-.fetch-status {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.fetch-status.loading {
-    background: #fffbeb;
-    color: #f59e0b;
-    border: 1px solid #fcd34d;
-}
-
-.fetch-status.success {
-    background: #f0fdf4;
-    color: #10b981;
-    border: 1px solid #86efac;
-}
-
-.fetch-status.error {
-    background: #fef2f2;
-    color: #ef4444;
-    border: 1px solid #fca5a5;
-}
-
-.fetch-status.info {
-    background: #eff6ff;
-    color: #3b82f6;
-    border: 1px solid #93c5fd;
-}
-
-/* Style pour le champ lien */
-.input-group input[type="url"] {
-    font-family: monospace;
-    font-size: 0.9rem;
-}
-
-/* Animation de pulsation pour le chargement */
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-.fa-spin {
-    animation: pulse 1.5s ease-in-out infinite;
+    .section-header p {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
 }
