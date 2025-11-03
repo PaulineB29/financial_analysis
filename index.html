@@ -237,10 +237,71 @@
 
             <!-- Results Section -->
             <section id="resultsSection" class="results-section" style="display: none;">
-                <!-- Le contenu des résultats reste identique -->
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-bar"></i> Résultats de l'Analyse</h2>
+                    <p>Analyse détaillée de <span id="resultsCompanyName" class="company-name">l'entreprise</span></p>
+                </div>
+
+                <!-- Score Summary -->
+                <div class="score-summary card">
+                    <div class="score-card">
+                        <div class="score-circle">
+                            <span id="globalScore">0%</span>
+                        </div>
+                        <div class="score-info">
+                            <h3>Score Global</h3>
+                            <p>Performance globale de l'entreprise</p>
+                        </div>
+                    </div>
+                    <div class="score-breakdown">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Santé</span>
+                            <div class="breakdown-bar">
+                                <div class="breakdown-fill" id="healthScore" style="width: 0%"></div>
+                            </div>
+                            <span class="breakdown-value" id="healthValue">0%</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Rentabilité</span>
+                            <div class="breakdown-bar">
+                                <div class="breakdown-fill" id="profitabilityScore" style="width: 0%"></div>
+                            </div>
+                            <span class="breakdown-value" id="profitabilityValue">0%</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Évaluation</span>
+                            <div class="breakdown-bar">
+                                <div class="breakdown-fill" id="valuationScore" style="width: 0%"></div>
+                            </div>
+                            <span class="breakdown-value" id="valuationValue">0%</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Croissance</span>
+                            <div class="breakdown-bar">
+                                <div class="breakdown-fill" id="growthScore" style="width: 0%"></div>
+                            </div>
+                            <span class="breakdown-value" id="growthValue">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="results-table card">
+                    <div class="table-container">
+                        <table id="resultsTable">
+                            <!-- Le tableau sera généré par JavaScript -->
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Conclusion -->
+                <div id="conclusion" class="conclusion-card">
+                    <!-- La conclusion sera générée par JavaScript -->
+                </div>
             </section>
         </main>
 
+        <!-- Footer -->
         <footer class="app-footer">
             <p>© 2024 Analyste Financier - Outil éducatif pour l'analyse fondamentale</p>
             <p class="disclaimer">Les résultats sont fournis à titre indicatif et ne constituent pas un conseil en investissement.</p>
