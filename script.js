@@ -1,48 +1,65 @@
-// Seuils de référence pour l'analyse
+// Ajouter cette fonction pour gérer les onglets
+function initTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Retirer active de tous
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // Activer l'onglet cliqué
+            btn.classList.add('active');
+            const tabId = btn.getAttribute('data-tab') + '-tab';
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+}
+
+// Appeler l'initialisation des onglets au chargement
+document.addEventListener('DOMContentLoaded', initTabs);
+
+// Seuils et configuration
 const SEUILS = {
-    // Santé Financière
     currentRatio: { bon: 1.5, excellent: 2.0 },
     debtToEquity: { bon: 0.5, excellent: 0.3 },
     interestCoverage: { bon: 5, excellent: 8 },
-    freeCashFlow: { bon: 0, excellent: 0 }, // Doit être positif
+    freeCashFlow: { bon: 0, excellent: 100000 },
     
-    // Rentabilité
     roe: { bon: 0.15, excellent: 0.20 },
     roic: { bon: 0.12, excellent: 0.15 },
     netMargin: { bon: 0.10, excellent: 0.15 },
     operatingMargin: { bon: 0.15, excellent: 0.20 },
     
-    // Évaluation
     peRatio: { bon: 15, excellent: 12 },
     pegRatio: { bon: 1, excellent: 0.8 },
     pbRatio: { bon: 1.5, excellent: 1.2 },
     pfcfRatio: { bon: 20, excellent: 15 },
-    dividendYield: { bon: 0.02, excellent: 0.03 }, // 2-3%
+    dividendYield: { bon: 0.02, excellent: 0.03 },
     evEbitda: { bon: 12, excellent: 8 },
     
-    // Croissance
-    revenueGrowth: { bon: 0.08, excellent: 0.12 }, // 8-12%
-    epsGrowth: { bon: 0.10, excellent: 0.15 }, // 10-15%
-    priceVsMA200: { bon: 0, excellent: 0 } // Prix > MM200
+    revenueGrowth: { bon: 0.08, excellent: 0.12 },
+    epsGrowth: { bon: 0.10, excellent: 0.15 },
+    priceVsMA200: { bon: 0, excellent: 0.05 }
 };
 
 function lancerAnalyse() {
-    // Récupérer toutes les valeurs des inputs
     const inputs = getInputValues();
-    
-    // Calculer tous les ratios
     const ratios = calculerRatios(inputs);
+    const scores = calculerScores(ratios);
     
-    // Afficher les résultats
-    afficherResultats(inputs.companyName, ratios);
+    afficherResultats(inputs.companyName, ratios, scores);
+    afficherScores(scores);
+    genererConclusion(scores);
     
-    // Générer la conclusion
-    genererConclusion(ratios);
+    // Scroll vers les résultats
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
 }
 
 function getInputValues() {
+    // Même fonction que précédemment
     return {
-        // Santé Financière
         currentAssets: parseFloat(document.getElementById('currentAssets').value) || 0,
         currentLiabilities: parseFloat(document.getElementById('currentLiabilities').value) || 0,
         totalDebt: parseFloat(document.getElementById('totalDebt').value) || 0,
@@ -52,12 +69,10 @@ function getInputValues() {
         operatingCashFlow: parseFloat(document.getElementById('operatingCashFlow').value) || 0,
         capitalExpenditures: parseFloat(document.getElementById('capitalExpenditures').value) || 0,
         
-        // Rentabilité
         netIncome: parseFloat(document.getElementById('netIncome').value) || 0,
         revenue: parseFloat(document.getElementById('revenue').value) || 0,
         nopat: parseFloat(document.getElementById('nopat').value) || 0,
         
-        // Évaluation
         sharePrice: parseFloat(document.getElementById('sharePrice').value) || 0,
         sharesOutstanding: parseFloat(document.getElementById('sharesOutstanding').value) || 0,
         bookValuePerShare: parseFloat(document.getElementById('bookValuePerShare').value) || 0,
@@ -66,7 +81,6 @@ function getInputValues() {
         ebitda: parseFloat(document.getElementById('ebitda').value) || 0,
         cash: parseFloat(document.getElementById('cash').value) || 0,
         
-        // Croissance
         revenueGrowth: parseFloat(document.getElementById('revenueGrowth').value) || 0,
         previousEPS: parseFloat(document.getElementById('previousEPS').value) || 0,
         priceVsMA200: parseFloat(document.getElementById('priceVsMA200').value) || 0,
@@ -76,25 +90,23 @@ function getInputValues() {
 }
 
 function calculerRatios(inputs) {
+    // Même fonction de calcul que précédemment
     const marketCap = inputs.sharePrice * inputs.sharesOutstanding;
     const enterpriseValue = marketCap + inputs.totalDebt - inputs.cash;
     const currentEPS = inputs.netIncome / inputs.sharesOutstanding;
     const peRatio = inputs.sharePrice / currentEPS;
     
     return {
-        // Santé Financière
         currentRatio: inputs.currentAssets / inputs.currentLiabilities,
         debtToEquity: inputs.totalDebt / inputs.shareholdersEquity,
         interestCoverage: inputs.ebit / inputs.interestExpense,
         freeCashFlow: inputs.operatingCashFlow - inputs.capitalExpenditures,
         
-        // Rentabilité
         roe: inputs.netIncome / inputs.shareholdersEquity,
         roic: inputs.nopat / (inputs.totalDebt + inputs.shareholdersEquity),
         netMargin: inputs.netIncome / inputs.revenue,
         operatingMargin: inputs.ebit / inputs.revenue,
         
-        // Évaluation
         peRatio: peRatio,
         pegRatio: peRatio / inputs.epsGrowth,
         pbRatio: inputs.sharePrice / inputs.bookValuePerShare,
@@ -102,25 +114,92 @@ function calculerRatios(inputs) {
         dividendYield: inputs.dividendPerShare / inputs.sharePrice,
         evEbitda: enterpriseValue / inputs.ebitda,
         
-        // Croissance
         revenueGrowth: inputs.revenueGrowth / 100,
         epsGrowth: inputs.epsGrowth / 100,
         priceVsMA200: inputs.priceVsMA200 / 100
     };
 }
 
-function afficherResultats(companyName, ratios) {
+function calculerScores(ratios) {
+    const categories = {
+        sante: ['currentRatio', 'debtToEquity', 'interestCoverage', 'freeCashFlow'],
+        rentabilite: ['roe', 'roic', 'netMargin', 'operatingMargin'],
+        evaluation: ['peRatio', 'pegRatio', 'pbRatio', 'pfcfRatio', 'dividendYield', 'evEbitda'],
+        croissance: ['revenueGrowth', 'epsGrowth', 'priceVsMA200']
+    };
+
+    const scores = {};
+
+    for (const [categorie, indicateurs] of Object.entries(categories)) {
+        let scoreCategorie = 0;
+        let totalPoids = 0;
+
+        indicateurs.forEach(indicateur => {
+            const valeur = ratios[indicateur];
+            const seuil = SEUILS[indicateur];
+            const poids = 1; // Tu peux ajuster les poids si nécessaire
+
+            let score = 0;
+            const ratiosInverses = ['debtToEquity', 'peRatio', 'pegRatio', 'pbRatio', 'pfcfRatio', 'evEbitda'];
+            const estInverse = ratiosInverses.includes(indicateur);
+
+            if (estInverse) {
+                if (valeur <= seuil.excellent) score = 100;
+                else if (valeur <= seuil.bon) score = 70;
+                else score = 30;
+            } else {
+                if (valeur >= seuil.excellent) score = 100;
+                else if (valeur >= seuil.bon) score = 70;
+                else score = 30;
+            }
+
+            scoreCategorie += score * poids;
+            totalPoids += poids;
+        });
+
+        scores[categorie] = Math.round(scoreCategorie / totalPoids);
+    }
+
+    // Score global (moyenne pondérée)
+    scores.global = Math.round(
+        (scores.sante + scores.rentabilite + scores.evaluation + scores.croissance) / 4
+    );
+
+    return scores;
+}
+
+function afficherScores(scores) {
+    // Score global
+    document.getElementById('globalScore').textContent = scores.global + '%';
+    const scoreCircle = document.querySelector('.score-circle');
+    scoreCircle.style.background = `conic-gradient(var(--primary) ${scores.global}%, var(--border) ${scores.global}%)`;
+
+    // Scores par catégorie
+    document.getElementById('healthScore').style.width = scores.sante + '%';
+    document.getElementById('healthValue').textContent = scores.sante + '%';
+
+    document.getElementById('profitabilityScore').style.width = scores.rentabilite + '%';
+    document.getElementById('profitabilityValue').textContent = scores.rentabilite + '%';
+
+    document.getElementById('valuationScore').style.width = scores.evaluation + '%';
+    document.getElementById('valuationValue').textContent = scores.evaluation + '%';
+
+    document.getElementById('growthScore').style.width = scores.croissance + '%';
+    document.getElementById('growthValue').textContent = scores.croissance + '%';
+}
+
+function afficherResultats(companyName, ratios, scores) {
     document.getElementById('resultsCompanyName').textContent = companyName;
     
     const tableHTML = `
-        <table class="ratio-table">
+        <table>
             <thead>
                 <tr>
                     <th>Catégorie</th>
-                    <th>Ratio</th>
-                    <th>Valeur Calculée</th>
-                    <th>Seuil "Bon"</th>
-                    <th>Verdict</th>
+                    <th>Indicateur</th>
+                    <th>Valeur</th>
+                    <th>Seuil</th>
+                    <th>Performance</th>
                 </tr>
             </thead>
             <tbody>
@@ -138,8 +217,8 @@ function genererLignesTableau(ratios) {
         "Santé Financière": [
             { nom: "Current Ratio", valeur: ratios.currentRatio, seuil: SEUILS.currentRatio, format: (v) => v.toFixed(2) },
             { nom: "Dette/Capitaux Propres", valeur: ratios.debtToEquity, seuil: SEUILS.debtToEquity, format: (v) => v.toFixed(2) },
-            { nom: "Couverture des Intérêts", valeur: ratios.interestCoverage, seuil: SEUILS.interestCoverage, format: (v) => v.toFixed(1) },
-            { nom: "Free Cash Flow (€)", valeur: ratios.freeCashFlow, seuil: SEUILS.freeCashFlow, format: (v) => v.toLocaleString('fr-FR') }
+            { nom: "Couverture des Intérêts", valeur: ratios.interestCoverage, seuil: SEUILS.interestCoverage, format: (v) => v.toFixed(1) + "x" },
+            { nom: "Free Cash Flow", valeur: ratios.freeCashFlow, seuil: SEUILS.freeCashFlow, format: (v) => v.toLocaleString('fr-FR') + " €" }
         ],
         "Rentabilité": [
             { nom: "ROE", valeur: ratios.roe, seuil: SEUILS.roe, format: (v) => (v * 100).toFixed(1) + "%" },
@@ -164,24 +243,20 @@ function genererLignesTableau(ratios) {
 
     let html = '';
     
-    for (const [categorie, ratiosCategorie] of Object.entries(categories)) {
-        // Ligne de catégorie
-        html += `<tr class="category-row"><td colspan="5"><strong>${categorie}</strong></td></tr>`;
-        
-        // Lignes de ratios
-        ratiosCategorie.forEach(ratio => {
-            const valeurFormatee = ratio.format(ratio.valeur);
-            const seuilFormate = ratio.seuil.bon;
-            const verdict = getVerdict(ratio.valeur, ratio.seuil, ratio.nom);
+    for (const [categorie, indicateurs] of Object.entries(categories)) {
+        indicateurs.forEach(indicateur => {
+            const valeurFormatee = indicateur.format(indicateur.valeur);
+            const seuilFormate = indicateur.seuil.bon;
+            const verdict = getVerdict(indicateur.valeur, indicateur.seuil, indicateur.nom);
             const classe = getClasseVerdict(verdict);
             
             html += `
                 <tr class="${classe}">
-                    <td>${categorie}</td>
-                    <td>${ratio.nom}</td>
+                    <td><strong>${categorie}</strong></td>
+                    <td>${indicateur.nom}</td>
                     <td>${valeurFormatee}</td>
                     <td>${seuilFormate}</td>
-                    <td><strong>${verdict}</strong></td>
+                    <td>${verdict}</td>
                 </tr>
             `;
         });
@@ -191,72 +266,62 @@ function genererLignesTableau(ratios) {
 }
 
 function getVerdict(valeur, seuil, nomRatio) {
-    // Logique spéciale pour certains ratios où "moins est mieux"
     const ratiosInverses = ['debtToEquity', 'peRatio', 'pegRatio', 'pbRatio', 'pfcfRatio', 'evEbitda'];
+    const nomCle = nomRatio.toLowerCase().replace(/[^a-zA-Z]/g, '');
     
-    if (ratiosInverses.includes(nomRatio.toLowerCase().replace(/[^a-zA-Z]/g, ''))) {
-        if (valeur <= seuil.excellent) return 'EXCELLENT';
-        if (valeur <= seuil.bon) return 'BON';
-        return 'MAUVAIS';
+    if (ratiosInverses.includes(nomCle)) {
+        if (valeur <= seuil.excellent) return 'Excellent';
+        if (valeur <= seuil.bon) return 'Bon';
+        return 'Faible';
     }
     
-    // Logique normale (plus c'est haut, mieux c'est)
-    if (valeur >= seuil.excellent) return 'EXCELLENT';
-    if (valeur >= seuil.bon) return 'BON';
-    return 'MAUVAIS';
+    if (valeur >= seuil.excellent) return 'Excellent';
+    if (valeur >= seuil.bon) return 'Bon';
+    return 'Faible';
 }
 
 function getClasseVerdict(verdict) {
     switch(verdict) {
-        case 'EXCELLENT': return 'ratio-good';
-        case 'BON': return 'ratio-neutral';
-        case 'MAUVAIS': return 'ratio-bad';
+        case 'Excellent': return 'ratio-excellent';
+        case 'Bon': return 'ratio-good';
+        case 'Faible': return 'ratio-bad';
         default: return '';
     }
 }
 
-function genererConclusion(ratios) {
-    const bonsRatios = Object.values(ratios).filter(ratio => 
-        ratio >= Object.values(SEUILS).find(s => s.bon).bon
-    ).length;
-    
-    const totalRatios = Object.keys(ratios).length;
-    const pourcentageBons = (bonsRatios / totalRatios) * 100;
+function genererConclusion(scores) {
+    const scoreGlobal = scores.global;
     
     let conclusionHTML = '';
     let conclusionClasse = '';
     
-    if (pourcentageBons >= 70) {
+    if (scoreGlobal >= 80) {
         conclusionClasse = 'conclusion-good';
         conclusionHTML = `
-            <div class="conclusion ${conclusionClasse}">
-                <h3>🚀 ANALYSE POSITIVE - ACTION INTÉRESSANTE</h3>
-                <p><strong>${pourcentageBons.toFixed(0)}% des indicateurs sont au vert.</strong></p>
-                <p>L'entreprise montre une santé financière solide, une rentabilité correcte et une évaluation raisonnable.</p>
-                <p><em>Recommandation : À étudier sérieusement pour un investissement.</em></p>
-            </div>
+            <h3><i class="fas fa-trophy"></i> EXCELLENTE OPPORTUNITÉ</h3>
+            <p><strong>Score global: ${scoreGlobal}%</strong> - L'entreprise présente des fondamentaux solides</p>
+            <p>✅ Santé financière robuste | ✅ Rentabilité élevée | ✅ Évaluation attractive | ✅ Croissance soutenue</p>
+            <p><em>Recommandation: Cette action mérite une place dans votre portefeuille.</em></p>
         `;
-    } else if (pourcentageBons >= 50) {
+    } else if (scoreGlobal >= 65) {
         conclusionClasse = 'conclusion-neutral';
         conclusionHTML = `
-            <div class="conclusion ${conclusionClasse}">
-                <h3>⚠️ ANALYSE MITIGÉE - À APPROFONDIR</h3>
-                <p><strong>${pourcentageBons.toFixed(0)}% des indicateurs sont acceptables.</strong></p>
-                <p>L'entreprise présente des points forts mais aussi des faiblesses significatives.</p>
-                <p><em>Recommandation : Analyser plus en détail les points faibles avant toute décision.</em></p>
-            </div>
+            <h3><i class="fas fa-chart-line"></i> OPPORTUNITÉ MODÉRÉE</h3>
+            <p><strong>Score global: ${scoreGlobal}%</strong> - L'entreprise a des points forts mais aussi des faiblesses</p>
+            <p>⚠️ Analysez les points faibles avant d'investir</p>
+            <p><em>Recommandation: À étudier plus en détail, pourrait convenir pour une allocation mineure.</em></p>
         `;
     } else {
         conclusionClasse = 'conclusion-bad';
         conclusionHTML = `
-            <div class="conclusion ${conclusionClasse}">
-                <h3>💀 ANALYSE NÉGATIVE - FUIR</h3>
-                <p><strong>Seulement ${pourcentageBons.toFixed(0)}% des indicateurs sont bons.</strong></p>
-                <p>L'entreprise présente trop de risques : santé financière fragile, rentabilité faible ou évaluation trop élevée.</p>
-                <p><em>Recommandation : Éviter cette action. Il y a de meilleures opportunités sur le marché.</em></p>
-            </div>
+            <h3><i class="fas fa-exclamation-triangle"></i> OPPORTUNITÉ RISQUÉE</h3>
+            <p><strong>Score global: ${scoreGlobal}%</strong> - L'entreprise présente trop de risques</p>
+            <p>❌ Santé financière fragile | ❌ Rentabilité faible | ❌ Évaluation élevée | ❌ Croissance insuffisante</p>
+            <p><em>Recommandation: Éviter cette action. De meilleures opportunités existent sur le marché.</em></p>
         `;
     }
     
-    document.getElementById('conclusion').innerHTML = conclusionHTML;
+    const conclusionElement = document.getElementById('conclusion');
+    conclusionElement.className = `conclusion-card ${conclusionClasse}`;
+    conclusionElement.innerHTML = conclusionHTML;
 }
