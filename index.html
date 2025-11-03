@@ -31,17 +31,34 @@
 
                 <div class="company-basic">
                     <div class="input-group">
+                        <label for="companySymbol">
+                            <i class="fas fa-tag"></i>
+                            Symbole Boursier
+                        </label>
+                        <input type="text" id="companySymbol" placeholder="Ex: AAPL, MSFT, TSLA" value="AAPL">
+                        <small>Symbole coté en bourse (NYSE, NASDAQ, etc.)</small>
+                    </div>
+                    
+                    <div class="input-group">
                         <label for="companyName">
                             <i class="fas fa-building"></i>
                             Nom de l'entreprise
                         </label>
                         <input type="text" id="companyName" placeholder="Ex: Apple Inc.">
                     </div>
+
+                    <div class="api-controls">
+                        <button onclick="recupererDonneesFMP()" class="fetch-btn" id="fetchFMPDataBtn" type="button">
+                            <i class="fas fa-cloud-download-alt"></i>
+                            Charger via API FMP
+                        </button>
+                        <div id="fmpStatus" class="fetch-status"></div>
+                    </div>
                     
                     <div class="input-group">
                         <label for="investingLink">
                             <i class="fas fa-link"></i>
-                            Lien Investing.com
+                            Lien Investing.com (optionnel)
                         </label>
                         <input type="url" id="investingLink" placeholder="https://www.investing.com/equities/apple-computer-inc-financial-summary" />
                         <small>Collez le lien de la page de l'entreprise sur Investing.com</small>
@@ -50,7 +67,7 @@
                     <div class="input-group">
                         <button onclick="recupererDonneesFinancieres()" class="fetch-btn" id="fetchDataBtn" type="button">
                             <i class="fas fa-download"></i>
-                            Récupérer les données financières
+                            Récupérer depuis Investing.com
                         </button>
                         <div id="fetchStatus" class="fetch-status"></div>
                     </div>
