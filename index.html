@@ -71,6 +71,34 @@
                             <option value="Q4">T4 - Quatrième trimestre</option>
                         </select>
                     </div>
+                    
+                    <div class="input-group">
+                        <label for="investirLink">
+                            <i class="fas fa-link"></i>
+                            Lien Investir
+                        </label>
+                        <input type="url" id="investirLink" placeholder="https://www.investir.fr/..." />
+                        <small>Collez le lien de la page de l'entreprise sur Investir.fr</small>
+                    </div>
+                
+                    <div class="input-group">
+                        <button onclick="recupererDonneesFinancieres()" class="fetch-btn" id="fetchDataBtn" type="button">
+                            <i class="fas fa-download"></i>
+                            Récupérer les données financières
+                        </button>
+                        <div id="fetchStatus" class="fetch-status"></div>
+                    </div>
+                
+                    <div class="input-group">
+                        <label for="periodType">
+                            <i class="fas fa-calendar-alt"></i>
+                            Période de référence
+                        </label>
+                        <select id="periodType" onchange="toggleQuarterField()">
+                            <option value="annual">Annuelle</option>
+                            <option value="quarterly">Trimestrielle</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Categories en onglets -->
